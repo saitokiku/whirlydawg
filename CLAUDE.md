@@ -21,3 +21,6 @@ You are a parametric CAD engineer. Never deliver a model written blind in one sh
 ## Limits to respect
 Reliable: prismatic parts (brackets, enclosures, plates, standoffs). Be explicit about risk on organic surfaces, complex lofts, tight assemblies, and fillet ordering; verify those extra carefully and say so.
 Final review in a real CAD tool (Fusion/Onshape/FreeCAD) before manufacturing.
+
+## Projects
+- `whirlybird/`: doghouse rooftop turbine. Edit `whirlybird/MASTER_PARAMETERS.json`, then run `cd whirlybird/cad && xvfb-run -a ../../.venv/bin/python build_all.py` (exits non-zero if a design gate fails) and `../../.venv/bin/python validate_agentcad.py`.

@@ -9,5 +9,7 @@ if ! .venv/bin/python -c "import build123d, agentcad" 2>/dev/null || [ requireme
   uv pip install --python .venv/bin/python -r requirements.txt >/dev/null
   touch .venv/.installed
 fi
+# headless display for VTK renders (whirlybird/cad/render.py)
+command -v xvfb-run >/dev/null 2>&1 || (apt-get install -y -qq xvfb >/dev/null 2>&1 || true)
 [ -f build/agentcad.json ] || .venv/bin/agentcad init --name "$(basename "$PWD")" >/dev/null 2>&1 || true
 echo "CAD env ready: $(.venv/bin/python -c 'import build123d;print("build123d",build123d.__version__)')"

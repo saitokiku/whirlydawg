@@ -1,0 +1,22 @@
+item,qty,type,spec / size,material,est_filament_g,source,notes
+upper_hub_closed_top,1,"printed, rotating","OD 188, 8 blind pockets open DOWN, closed top, drip lip",PAHT-CF final (PETG-HF trial),164.7,print,top face down on bed
+lower_hub_closed_bottom,1,"printed, rotating","OD 188, 8 blind pockets open UP, weeps, chimney, labyrinth cup",PAHT-CF final (PETG-HF trial),163.8,print,bottom down on bed
+blade,8,"sheet metal, rotating","57.15 x 139.7 blank, tabs 14 x 7, bow 15 mm",1.6 mm aluminium,,OWNED stock (4 pieces 11.75 x 3.75 in),cut 1 test blade first
+shaft,1,rotating,6.35 mm (1/4 in) x 201.8 mm,303/304 stainless precision rod,,BUY (or OWNED tube if it slips into bearings),2 spot dimples for set screws
+bearing R4-2RS,2,stationary outer / rotating inner,6.35 x 15.875 x 4.98,"steel, sealed",,OWNED,verify bore marking
+shaft collar 1/4 in bore,1,rotating,"OD ~12.7, width ~7.9, set screw",steel / stainless,,BUY,below lower bearing
+set screw M4 x 6 cup point,2,rotating,A2 stainless + medium threadlocker,stainless,,BUY,"one per hub, into shaft dimple"
+hex nut M4 DIN 934,2,rotating,7 AF x 3.2,stainless,,BUY,drops into hub nut slot
+thrust_washer_top / bottom,2,"printed, rotating","OD 8.6 ID 6.5, t 2.0 / 1.5",PETG-HF,0,print,contacts bearing INNER race only
+bearing_support_stationary,1,"printed, stationary","ring + 3 spokes + 2-bearing tower, 50 mm bearing spacing",PAHT-CF or ABS (painted),29.4,print,
+roof_flash_adapter (pick pitch file),1,"printed, stationary","flange OD 230, collar, gasket groove, 8 screw holes",ABS (painted) or PAHT-CF,89.7,print,choose STL matching roof pitch
+"M3 x 12 pan screw, stainless",3,stationary,support ring to adapter collar (self-tapping into printed boss),stainless,,BUY,
+#8 x 3/4 in pan-head wood screw + EPDM/neoprene washer,8,stationary,adapter flange to roof deck,stainless,,BUY,
+exterior sealant (butyl tape or polyurethane / silicone),1,stationary,bead in flange gasket groove + screw heads,,,BUY,
+rain_baffle_if_needed,1,"printed, stationary (optional)","150 mm drip tray clipped to tower bottom, 6.4 mm drain hole",PETG-HF,38.9,print if water test fails,+1 M3 x 10 clamp screw; optional 1/4 in OD vinyl drain tube pressed into hole
+inlet_vent_louver,2,"printed, stationary","170 x 120 frame, 140 x 90 opening, 45 deg louvres",PETG-HF / ABS,~45 each,print,"+ aluminium/fibreglass insect screen 150 x 100, 4 screws each"
+blade_forming_die_lower / upper,1,tool,press in bench vise,"PETG-HF or PLA, 6 walls 50 % infill",~190,print,
+single_blade_socket_test_top / bottom,1,test coupon,one pocket each,PETG-HF or PLA,~10,print FIRST,
+slot_clearance_coupon,1,test coupon,1.85 / 1.95 / 2.05 / 2.15 mm,same as final hubs,~30,print FIRST,
+bearing_and_shaft_fit_coupon,1,test coupon,"seats 15.80-16.10, bores 6.45-6.65",same as final hubs,~25,print FIRST,
+shaft_dimple_drill_guide,1,tool,3.5 mm spot drill guide on 1/4 in rod,PETG-HF,~15,print,

@@ -1,0 +1,14 @@
+{
+  "solids_in_step": 27,
+  "solids_in_model": 27,
+  "volume_match_all": true,
+  "bbox_zmax": 165.243,
+  "bbox_zmin": -68.92,
+  "labels": [
+    "bearing_lower_inner_race",
+    "bearing_lower_outer_race",
+    "bearing_lower_seal",
+    "bearing_support_stationary",
+    "bearing_upper_inner_race"
+  ]
+}

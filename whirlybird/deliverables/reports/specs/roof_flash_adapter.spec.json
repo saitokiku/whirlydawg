@@ -1,0 +1,43 @@
+{
+  "expect_solids": 1,
+  "features": [
+    {
+      "name": "throat",
+      "type": "cylinder",
+      "diameter_mm": 127.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "roof_screw_holes",
+      "type": "cylinder",
+      "diameter_mm": 4.5,
+      "diameter_tolerance_mm": 0.06,
+      "count": 8
+    },
+    {
+      "name": "support_screw_clearance_90deg",
+      "type": "cylinder",
+      "diameter_mm": 3.4,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "+y"
+    },
+    {
+      "name": "support_screw_clearance_210deg",
+      "type": "cylinder",
+      "diameter_mm": 3.4,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "other"
+    },
+    {
+      "name": "support_screw_clearance_330deg",
+      "type": "cylinder",
+      "diameter_mm": 3.4,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "other"
+    }
+  ]
+}

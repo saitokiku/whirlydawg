@@ -1,3 +1,7 @@
 build123d==0.10.0
 build123d-mcp==0.3.91
 agentcad==0.7.0
+reportlab==5.1.0
+trimesh==5.1.1
+ezdxf==1.4.5
+vtk==9.3.1

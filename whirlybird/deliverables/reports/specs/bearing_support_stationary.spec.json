@@ -1,0 +1,57 @@
+{
+  "expect_solids": 1,
+  "features": [
+    {
+      "name": "bearing_seats",
+      "type": "cylinder",
+      "diameter_mm": 15.95,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "mid_bore",
+      "type": "cylinder",
+      "diameter_mm": 11.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "tower_od",
+      "type": "cylinder",
+      "diameter_mm": 24.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "throat",
+      "type": "cylinder",
+      "diameter_mm": 127.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "m3_pilot_90deg",
+      "type": "cylinder",
+      "diameter_mm": 2.6,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "+y"
+    },
+    {
+      "name": "m3_pilot_210deg",
+      "type": "cylinder",
+      "diameter_mm": 2.6,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "other"
+    },
+    {
+      "name": "m3_pilot_330deg",
+      "type": "cylinder",
+      "diameter_mm": 2.6,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1,
+      "axis": "other"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "expect_solids": 1,
+  "features": [
+    {
+      "name": "shaft_bore",
+      "type": "cylinder",
+      "diameter_mm": 6.55,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "set_screw_hole",
+      "type": "cylinder",
+      "diameter_mm": 4.4,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "chimney_id",
+      "type": "cylinder",
+      "diameter_mm": 127.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "labyrinth_cup",
+      "type": "cylinder",
+      "diameter_mm": 28.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    },
+    {
+      "name": "outer_diameter",
+      "type": "cylinder",
+      "diameter_mm": 188.0,
+      "diameter_tolerance_mm": 0.06,
+      "count": 1
+    }
+  ]
+}

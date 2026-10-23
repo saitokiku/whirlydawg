@@ -1,0 +1,321 @@
+STL MESH VERIFICATION LOG (trimesh 5.1.1)
+Criteria: watertight, consistent winding, positive volume, exactly 1 body, |mesh-CAD volume| < 1 %,
+          extent within 250 x 250 x 256 mm (3 mm bed margin), lowest point on z = 0 (print pose).
+
+PASS  upper_hub_closed_top.stl
+      triangles              5960
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -2
+      mesh_volume_mm3        235676.3
+      cad_volume_mm3         235788.4
+      volume_error_pct       -0.048
+      extent_mm              [187.98, 187.98, 37.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 14.9
+      unsupported_max_height_mm 27.2
+PASS  lower_hub_closed_bottom.stl
+      triangles              5724
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -28
+      mesh_volume_mm3        234331.5
+      cad_volume_mm3         234519.3
+      volume_error_pct       -0.08
+      extent_mm              [187.97, 187.98, 48.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 596.8
+      unsupported_max_height_mm 44.2
+PASS  thrust_washer_top.stl
+      triangles              840
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           0
+      mesh_volume_mm3        49.8
+      cad_volume_mm3         49.8
+      volume_error_pct       -0.06
+      extent_mm              [8.6, 8.6, 2.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 0.0
+      unsupported_max_height_mm 0.0
+PASS  thrust_washer_bottom.stl
+      triangles              840
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           0
+      mesh_volume_mm3        37.3
+      cad_volume_mm3         37.4
+      volume_error_pct       -0.06
+      extent_mm              [8.6, 8.6, 1.5]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 0.0
+      unsupported_max_height_mm 0.0
+PASS  bearing_support_stationary.stl
+      triangles              4944
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -6
+      mesh_volume_mm3        42054.8
+      cad_volume_mm3         42082.3
+      volume_error_pct       -0.065
+      extent_mm              [132.77, 132.79, 54.92]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2198.8
+      unsupported_max_height_mm 18.3
+PASS  roof_flash_adapter.stl
+      triangles              7598
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        128309.2
+      cad_volume_mm3         128386.3
+      volume_error_pct       -0.06
+      extent_mm              [229.95, 229.97, 14.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2217.5
+      unsupported_max_height_mm 10.7
+PASS  rain_baffle_if_needed.stl
+      triangles              2588
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -4
+      mesh_volume_mm3        55673.1
+      cad_volume_mm3         55699.3
+      volume_error_pct       -0.047
+      extent_mm              [149.97, 149.98, 40.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 14.7
+      unsupported_max_height_mm 36.8
+PASS  blade_forming_die_lower.stl
+      triangles              30358
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           2
+      mesh_volume_mm3        302871.2
+      cad_volume_mm3         302785.0
+      volume_error_pct       0.028
+      extent_mm              [144.72, 69.75, 47.1]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 1.2
+      unsupported_max_height_mm 18.0
+PASS  blade_forming_die_upper.stl
+      triangles              34870
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           2
+      mesh_volume_mm3        277399.6
+      cad_volume_mm3         277702.4
+      volume_error_pct       -0.109
+      extent_mm              [132.12, 57.15, 45.5]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2.4
+      unsupported_max_height_mm 45.5
+PASS  single_blade_socket_test_top.stl
+      triangles              3772
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           2
+      mesh_volume_mm3        6788.9
+      cad_volume_mm3         6788.9
+      volume_error_pct       0.0
+      extent_mm              [26.73, 22.0, 12.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 0.0
+      unsupported_max_height_mm 0.0
+PASS  single_blade_socket_test_bottom.stl
+      triangles              5434
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           0
+      mesh_volume_mm3        6779.2
+      cad_volume_mm3         6779.1
+      volume_error_pct       0.0
+      extent_mm              [26.73, 22.0, 12.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 0.0
+      unsupported_max_height_mm 0.0
+PASS  slot_clearance_coupon_1p85_1p95_2p05_2p15.stl
+      triangles              15622
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           2
+      mesh_volume_mm3        40517.7
+      cad_volume_mm3         40517.7
+      volume_error_pct       0.0
+      extent_mm              [102.0, 34.0, 12.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 0.0
+      unsupported_max_height_mm 0.0
+PASS  bearing_and_shaft_fit_coupon.stl
+      triangles              42648
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -24
+      mesh_volume_mm3        32015.9
+      cad_volume_mm3         32015.3
+      volume_error_pct       0.002
+      extent_mm              [100.0, 50.0, 20.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2.5
+      unsupported_max_height_mm 6.4
+PASS  shaft_dimple_drill_guide.stl
+      triangles              6168
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           0
+      mesh_volume_mm3        19392.6
+      cad_volume_mm3         19391.9
+      volume_error_pct       0.004
+      extent_mm              [40.0, 24.0, 22.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 200.7
+      unsupported_max_height_mm 12.3
+PASS  inlet_vent_louver.stl
+      triangles              1924
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -20
+      mesh_volume_mm3        69248.7
+      cad_volume_mm3         69248.5
+      volume_error_pct       0.0
+      extent_mm              [170.0, 120.0, 15.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 22916.2
+      unsupported_max_height_mm 9.9
+PASS  lower_hub_SOLID_DISC_ALTERNATE_not_recommended.stl
+      triangles              3906
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -18
+      mesh_volume_mm3        342023.8
+      cad_volume_mm3         342234.3
+      volume_error_pct       -0.062
+      extent_mm              [187.97, 187.98, 48.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 15.1
+      unsupported_max_height_mm 44.2
+PASS  roof_flash_adapter_pitch_0in12.stl
+      triangles              7598
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        128309.2
+      cad_volume_mm3         128386.3
+      volume_error_pct       -0.06
+      extent_mm              [229.95, 229.97, 14.0]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2217.5
+      unsupported_max_height_mm 10.7
+PASS  roof_flash_adapter_pitch_2in12.stl
+      triangles              7742
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        157126.1
+      cad_volume_mm3         157184.6
+      volume_error_pct       -0.037
+      extent_mm              [232.05, 232.0, 34.13]
+      min_z                  -0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2216.8
+      unsupported_max_height_mm 29.4
+PASS  roof_flash_adapter_pitch_3in12.stl
+      triangles              7752
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        175576.5
+      cad_volume_mm3         175640.6
+      volume_error_pct       -0.036
+      extent_mm              [234.23, 234.22, 44.54]
+      min_z                  0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2217.0
+      unsupported_max_height_mm 39.1
+PASS  roof_flash_adapter_pitch_4in12.stl
+      triangles              7800
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        194699.6
+      cad_volume_mm3         194751.9
+      volume_error_pct       -0.027
+      extent_mm              [237.23, 237.22, 54.27]
+      min_z                  -0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2216.1
+      unsupported_max_height_mm 48.3
+PASS  roof_flash_adapter_pitch_5in12.stl
+      triangles              7804
+      watertight             True
+      winding_consistent     True
+      is_volume              True
+      bodies                 1
+      euler_number           -22
+      mesh_volume_mm3        214661.2
+      cad_volume_mm3         214718.9
+      volume_error_pct       -0.027
+      extent_mm              [240.89, 240.88, 63.32]
+      min_z                  -0.0
+      fits_bed               True
+      unsupported_down_area_mm2 2216.1
+      unsupported_max_height_mm 56.8
+
+OVERALL: PASS (21 files)
