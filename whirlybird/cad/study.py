@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from params import load_inputs, derive, variant  # noqa: E402
 
-OUT = Path(__file__).resolve().parents[1] / "deliverables" / "reports"
+OUT = Path(__file__).resolve().parents[1] / "reports"
 
 
 def row(P, D):

@@ -10,9 +10,9 @@ You are a parametric CAD engineer. Never deliver a model written blind in one sh
 - Env bootstrap: `scripts/setup.sh` (runs automatically on session start).
 
 ## Process (every part)
-1. **Spec**: copy `templates/spec.md` to `parts/<name>/spec.md` and fill it in; write measurable rows to `parts/<name>/spec.json` (`agentcad check-spec` format). Missing info → ask, or list it under "assumptions". Never silently invent wall thickness, draft, tolerances.
+1. **Spec**: copy `cad_workspace/templates/spec.md` to `cad_workspace/parts/<name>/spec.md` and fill it in; write measurable rows to `cad_workspace/parts/<name>/spec.json` (`agentcad check-spec` format). Missing info → ask, or list it under "assumptions". Never silently invent wall thickness, draft, tolerances.
 2. **Plan before modeling**: state datum, coordinate system, feature order, key parameters.
-3. **Script** `parts/<name>/part.py`: all dimensions as named variables in a `PARAMS` dict at the top; no magic numbers below it.
+3. **Script** `cad_workspace/parts/<name>/part.py`: all dimensions as named variables in a `PARAMS` dict at the top; no magic numbers below it.
 4. **Build incrementally**: base body → features → fillets/chamfers last. After each step render and measure; compare numbers to the spec. Do not say "looks right"; quote measured values vs spec values.
 5. **Reference geometry**: import mating-part STEP files from `reference/` and check clearance/interference against them rather than trusting typed numbers.
 6. **Validate**: `agentcad run`, require `is_valid: true`, 1 expected solid, `agentcad check-spec` passes, printability check for FDM.
@@ -23,4 +23,4 @@ Reliable: prismatic parts (brackets, enclosures, plates, standoffs). Be explicit
 Final review in a real CAD tool (Fusion/Onshape/FreeCAD) before manufacturing.
 
 ## Projects
-- `whirlybird/`: doghouse rooftop turbine. Edit `whirlybird/MASTER_PARAMETERS.json`, then run `cd whirlybird/cad && xvfb-run -a ../../.venv/bin/python build_all.py` (exits non-zero if a design gate fails) and `../../.venv/bin/python validate_agentcad.py`.
+- `whirlybird/`: doghouse rooftop turbine (source in `whirlybird/cad/`, outputs written to the numbered folders `1_`…`5_` at the repo root via `whirlybird/cad/layout.py`). Edit `whirlybird/MASTER_PARAMETERS.json`, then run `cd whirlybird/cad && xvfb-run -a ../../.venv/bin/python build_all.py` (exits non-zero if a design gate fails) and `../../.venv/bin/python validate_agentcad.py`.

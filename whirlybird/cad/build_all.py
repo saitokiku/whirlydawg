@@ -25,9 +25,9 @@ import flatpattern as FP  # noqa: E402
 import geometry as g  # noqa: E402
 from params import derive, load_inputs, variant, write_report, unresolved  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "deliverables"
-DIRS = {k: OUT / k for k in ("step", "stl", "dxf", "svg", "pdf", "renders", "reports")}
+import layout as L  # noqa: E402
+
+DIRS = L.DIRS
 
 RGB = {"rotor": (0.93, 0.55, 0.20), "blade": (0.78, 0.80, 0.83), "shaft": (0.45, 0.47, 0.50),
        "hardware": (0.25, 0.25, 0.28), "bearing": (0.30, 0.55, 0.85), "stator": (0.55, 0.60, 0.66),
@@ -81,7 +81,7 @@ def export_mesh(shape, path, cad_volume, bed, margin):
 
 
 def build(args):
-    for d in DIRS.values():
+    for d in L.ALL:
         d.mkdir(parents=True, exist_ok=True)
     P = load_inputs()
     D = derive(P)
@@ -204,10 +204,11 @@ def build(args):
         if not it.printable:
             continue
         s = it.print_pose(it.shape)
-        meshes.append(export_mesh(s, DIRS["stl"] / f"{it.name}.stl", it.shape.volume, bed, margin))
+        if L.stl_dir(it.name) is not None:
+            meshes.append(export_mesh(s, L.stl_dir(it.name) / f"{it.name}.stl", it.shape.volume, bed, margin))
     for name, (shape, pose) in extras.items():
         s = pose(shape)
-        meshes.append(export_mesh(s, DIRS["stl"] / f"{name}.stl", shape.volume, bed, margin))
+        meshes.append(export_mesh(s, L.stl_dir(name) / f"{name}.stl", shape.volume, bed, margin))
     report["meshes"] = meshes
     gate("All STL meshes watertight, manifold, single body, volume within 1 %, on bed",
          all(m["pass"] for m in meshes), [m["file"] for m in meshes if not m["pass"]])
@@ -232,7 +233,7 @@ def build(args):
     with open(DIRS["reports"] / "design_checks.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
     write_mesh_log(meshes, DIRS["reports"] / "mesh_verification_log.txt")
-    write_bom(P, D, items, fil, DIRS["reports"].parent / "BOM.csv")
+    write_bom(P, D, items, fil, L.BOM)
 
     if args.render:
         log("renders")

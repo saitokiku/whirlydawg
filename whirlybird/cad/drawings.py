@@ -234,7 +234,7 @@ def sheet_cover(S, P, D, report, renders):
             ["Height margin to 190.5 limit", f"{D['height_margin_to_limit']:.1f} mm"]]
     S.table(140, 152, rows, [62, 66], size=7)
     g = report["gates"]
-    S.text(14, 97, f"DESIGN GATES ({sum(x['pass'] for x in g)}/{len(g)} PASS) - see sheet 12 and reports/design_checks.json", 8, True)
+    S.text(14, 97, f"DESIGN GATES ({sum(x['pass'] for x in g)}/{len(g)} PASS) - see sheet 12 and whirlybird/reports/design_checks.json", 8, True)
     rows = [["#", "Gate (automated on the CAD)", "Result"]] + [[str(i + 1), x["gate"][:92], "PASS" if x["pass"] else "FAIL"] for i, x in enumerate(g)]
     S.table(14, 94, rows, [6, 150, 14], size=6.1, row_h=3.4)
     S.lines(190, 82, ["SHEET INDEX", "1 Cover / datums / results", "2 Axial section, height stack", "3 Rotor vs stationary",
@@ -727,7 +727,7 @@ def comparison_pdf(path, P, D, renders, study_rows):
     S.lines(172, 60, ["Reading the table:", "- No collisions for 8, 10 or 12 with this blade envelope.",
                       "- More blades raise plan coverage (rain shading) and mass,", "  and reduce the open exhaust area between blades.",
                       "- They do NOT guarantee more ventilation or rain-tightness.", "- 8 blades remains the primary design; 10/12 are",
-                      "  parametric (set blade_count) pending airflow tests.", "- Full 27-variant table: reports/variant_study.csv"], 7.2)
+                      "  parametric (set blade_count) pending airflow tests.", "- Full 27-variant table: whirlybird/reports/variant_study.csv"], 7.2)
     S.frame(1, 2)
     c.showPage()
     S2 = Sheet(c, "Chord angle variants")
@@ -809,7 +809,7 @@ def make_all(P, D, items, report, DIRS):
                [(renders / "view_top.png", "TOP"), (renders / "view_side.png", "SIDE"), (renders / "view_underside.png", "UNDERSIDE")],
                ["Orthographic renders of the tessellated build123d solids (no artistic imagery).",
                 "Orange = printed rotating hubs; silver = aluminium blades; grey-blue = stationary roof parts; green = optional drip tray."])
-    templates_pdf(P, D, pdf / "blade_and_roof_templates_1to1.pdf")
+    templates_pdf(P, D, DIRS["templates"] / "blade_and_roof_templates_1to1.pdf")
     import csv
     with open(DIRS["reports"] / "variant_study.csv") as f:
         rows = [{k: (float(v) if v.replace('.', '', 1).replace('-', '', 1).isdigit() else v) for k, v in r.items()} for r in csv.DictReader(f)]

@@ -11,10 +11,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from params import derive, load_inputs  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[1]
-STEP = ROOT / "deliverables" / "step"
-REP = ROOT / "deliverables" / "reports"
-SPEC = ROOT / "deliverables" / "reports" / "specs"
+import layout as L  # noqa: E402
+
+STEP = L.STEP
+REP = L.REPORTS
+SPEC = L.REPORTS / "specs"
 
 
 def run(args):
@@ -71,13 +72,23 @@ def main():
                                    "missing": [m.get("name") for m in d.get("missing_features", [])],
                                    "matched": [(m["name"], m["measured"]["diameter_mm"], m["measured"]["count"]) for m in d.get("matched_features", [])],
                                    "failed_rows": [m["name"] for m in d.get("matched_features", []) if not m.get("passed")]}
-    res["all_valid"] = all(v["is_valid"] for v in res["inspect"].values())
+    # STEP round trip: reload the assembly and compare solid count and volumes with the live model
+    from build123d import import_step
+    import assembly as A
+    items = A.build(P, D)
+    sol = import_step(str(STEP / "whirlybird_complete_assembly.step")).solids()
+    cad = sorted(it.shape.volume for it in items)
+    stp = sorted(s.volume for s in sol)
+    res["step_round_trip"] = {"solids_model": len(cad), "solids_step": len(stp),
+                              "volumes_match": len(cad) == len(stp) and all(abs(a - b) <= max(0.05, 1e-5 * a) for a, b in zip(cad, stp))}
+    res["all_valid"] = all(v["is_valid"] for v in res["inspect"].values()) and res["step_round_trip"]["volumes_match"]
     res["all_specs_pass"] = all(v["passed"] for v in res["check_spec"].values())
     (REP / "agentcad_validation.json").write_text(json.dumps(res, indent=2))
     for k, v in res["inspect"].items():
         print(f"{'ok ' if v['is_valid'] else 'BAD'} {k} {v['first_failure'] or ''}")
     for k, v in res["check_spec"].items():
         print(f"spec {k}: passed={v['passed']} missing={v['missing']} failed={v['failed_rows']}")
+    print("STEP round trip", res["step_round_trip"])
     print("ALL VALID", res["all_valid"], "ALL SPECS", res["all_specs_pass"])
     return 0 if res["all_valid"] and res["all_specs_pass"] else 1
 

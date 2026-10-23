@@ -1,0 +1,266 @@
+{
+  "inspect": {
+    "bearing_and_shaft_fit_coupon.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "bearing_support_stationary.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "blade_formed.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "blade_forming_die_lower.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "blade_forming_die_upper.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "inlet_vent_louver.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "lower_hub_SOLID_DISC_ALTERNATE_not_recommended.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "lower_hub_closed_bottom.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "rain_baffle_if_needed.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter_pitch_0in12.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter_pitch_2in12.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter_pitch_3in12.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter_pitch_4in12.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "roof_flash_adapter_pitch_5in12.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "rotor_subassembly.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "shaft.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "shaft_dimple_drill_guide.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "single_blade_socket_test_bottom.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "single_blade_socket_test_top.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "slot_clearance_coupon_1p85_1p95_2p05_2p15.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "thrust_washer_bottom.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "thrust_washer_top.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "upper_hub_closed_top.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    },
+    "whirlybird_complete_assembly.step": {
+      "status": "success",
+      "is_valid": true,
+      "first_failure": null
+    }
+  },
+  "check_spec": {
+    "upper_hub_closed_top": {
+      "passed": true,
+      "missing": [],
+      "matched": [
+        [
+          "shaft_bore_blind",
+          6.6,
+          1
+        ],
+        [
+          "set_screw_hole",
+          4.4,
+          1
+        ],
+        [
+          "outer_diameter",
+          188.0,
+          1
+        ]
+      ],
+      "failed_rows": []
+    },
+    "lower_hub_closed_bottom": {
+      "passed": true,
+      "missing": [],
+      "matched": [
+        [
+          "shaft_bore",
+          6.6,
+          1
+        ],
+        [
+          "set_screw_hole",
+          4.4,
+          1
+        ],
+        [
+          "chimney_id",
+          127.0,
+          1
+        ],
+        [
+          "labyrinth_cup",
+          28.0,
+          1
+        ],
+        [
+          "outer_diameter",
+          188.0,
+          1
+        ]
+      ],
+      "failed_rows": []
+    },
+    "bearing_support_stationary": {
+      "passed": true,
+      "missing": [],
+      "matched": [
+        [
+          "bearing_seats",
+          15.9,
+          1
+        ],
+        [
+          "mid_bore",
+          11.0,
+          1
+        ],
+        [
+          "tower_od",
+          24.0,
+          1
+        ],
+        [
+          "throat",
+          127.0,
+          1
+        ],
+        [
+          "m3_pilot_90deg",
+          2.6,
+          1
+        ],
+        [
+          "m3_pilot_210deg",
+          2.6,
+          1
+        ],
+        [
+          "m3_pilot_330deg",
+          2.6,
+          1
+        ]
+      ],
+      "failed_rows": []
+    },
+    "roof_flash_adapter": {
+      "passed": true,
+      "missing": [],
+      "matched": [
+        [
+          "throat",
+          127.0,
+          1
+        ],
+        [
+          "roof_screw_holes",
+          4.5,
+          8
+        ],
+        [
+          "support_screw_clearance_90deg",
+          3.4,
+          1
+        ],
+        [
+          "support_screw_clearance_210deg",
+          3.4,
+          1
+        ],
+        [
+          "support_screw_clearance_330deg",
+          3.4,
+          1
+        ]
+      ],
+      "failed_rows": []
+    }
+  },
+  "step_round_trip": {
+    "solids_model": 27,
+    "solids_step": 27,
+    "volumes_match": true
+  },
+  "all_valid": true,
+  "all_specs_pass": true
+}
