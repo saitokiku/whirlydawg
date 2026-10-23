@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "build123d": {
+      "command": ".venv/bin/build123d-mcp",
+      "args": ["--exec-timeout", "120"]
+    }
+  }
+}
