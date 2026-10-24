@@ -7,7 +7,7 @@
 | `assembly_section.pdf` | cut-in-half view showing how the blades lock into the caps |
 | `rotor_vs_stationary.pdf` | orange = spins, blue = fixed to the roof |
 | `CAD_views_top_side_underside.pdf` | top, side and bottom views |
-| `comparison_8_10_12_blades.pdf` | what 10 or 12 blades would look like |
+| `comparison_16_20_24_blades.pdf` | why 20 blades: 16 leaves gaps, 24 chokes the airflow |
 | `images/` | all pictures (PNG) |
 
 All pictures and drawings are generated from the real 3D model, not drawn by hand.

@@ -2,29 +2,30 @@
   "inputs_file": "MASTER_PARAMETERS.json",
   "derived_summary": {
     "blade_developed_body_length": 125.7,
-    "cap_separation": 121.243,
-    "blade_u_inner": -11.0,
-    "blade_u_outer": 46.15,
-    "bow_max_slope_deg": 21.24,
-    "bow_min_bend_radius": 49.647,
+    "cap_separation": 125.7,
+    "blade_u_inner": -22.25,
+    "blade_u_outer": 22.25,
+    "cup_angle_deg": 56.659,
+    "cup_chord": 42.709,
+    "cup_depth": 5.39,
     "pocket_length": 14.5,
     "tab_bottom_clearance_in_pocket": 1.5,
-    "pocket_outer_radius_at_mouth": 90.516,
-    "pocket_outer_radius_below_lead_in": 88.562,
-    "upper_hub_shell_outside_pocket": 3.484,
-    "lower_hub_shell_outside_pocket": 3.484,
-    "upper_hub_shell_outside_pocket_below_mouth": 5.438,
+    "pocket_outer_radius_at_mouth": 118.402,
+    "pocket_outer_radius_below_lead_in": 116.619,
+    "upper_hub_shell_outside_pocket": 5.598,
+    "lower_hub_shell_outside_pocket": 5.598,
+    "upper_hub_shell_outside_pocket_below_mouth": 7.381,
     "upper_hub_roof_over_pocket": 3.5,
     "lower_hub_floor_under_pocket": 3.5,
-    "blade_end_outer_radius": 122.693,
-    "blade_end_inner_radius": 73.262,
+    "blade_end_outer_radius": 128.672,
+    "blade_end_inner_radius": 105.396,
     "z_collar_top": 14.0,
     "z_lower_hub_bottom": 20.0,
     "z_lower_face": 32.0,
-    "z_upper_face": 153.243,
-    "z_rotor_top": 165.243,
-    "installed_height": 165.243,
-    "height_margin_to_limit": 25.257,
+    "z_upper_face": 157.7,
+    "z_rotor_top": 169.7,
+    "installed_height": 169.7,
+    "height_margin_to_limit": 20.8,
     "z_upper_bearing_top": 26.0,
     "z_cup_ceiling": 28.0,
     "z_upper_bearing_center": 23.54,
@@ -35,34 +36,42 @@
     "z_collar_top_face": -30.62,
     "z_collar_bottom_face": -38.56,
     "z_shaft_bottom": -40.56,
-    "z_upper_bore_top": 161.743,
-    "z_shaft_top": 161.243,
-    "shaft_length": 201.803,
+    "z_upper_bore_top": 166.2,
+    "z_upper_nut_bottom": 159.5,
+    "z_upper_nut_top": 162.7,
+    "z_shaft_top": 158.2,
+    "shaft_length": 198.76,
     "shaft_fits_user_tube_length": true,
-    "z_upper_set_screw": 140.243,
+    "z_tie_rod_top": 164.0,
+    "z_tie_rod_bottom": -47.06,
+    "tie_rod_length": 211.06,
+    "tie_rod_top_clear_of_bore_top": 2.2,
     "z_lower_set_screw": 62.0,
-    "set_screw_axis_spacing": 78.243,
     "z_lower_boss_top": 68.0,
-    "z_upper_boss_bottom": 128.243,
+    "z_upper_boss_bottom": 132.7,
     "z_chimney_top": 57.0,
     "z_support_ring_bottom": 4.0,
     "tower_length": 54.92,
     "tower_below_roof": 28.92,
-    "rotor_od_actual": 259.149,
-    "rotor_od_at_cap_faces": 245.387,
-    "rotor_od_vs_target": -7.551,
-    "blade_inner_radius_min": 72.751,
-    "neighbour_min_clearance_sampled": 52.129,
-    "blade_plan_angular_span_deg": 26.01,
-    "plan_coverage_fraction": 0.578,
-    "blade_flat_area_mm2": 7379.755,
-    "blade_mass_g": 31.881
+    "rotor_od_actual": 257.901,
+    "rotor_od_at_cap_faces": 257.901,
+    "rotor_od_vs_target": -8.799,
+    "blade_inner_radius_min": 104.495,
+    "neighbour_min_clearance_sampled": 11.516,
+    "air_channel_width_between_blades": 11.516,
+    "blade_plan_angular_span_deg": 18.058,
+    "plan_coverage_fraction": 1.003,
+    "blade_flat_area_mm2": 5789.65,
+    "blade_mass_g": 25.011
   },
   "gates": [
     {
       "gate": "No unintended solid interference anywhere in the assembly",
       "pass": true,
-      "value": []
+      "value": [
+        "tie_rod_M4 x tie_rod_upper_captive_nut_M4: 0.458 mm3",
+        "tie_rod_M4 x tie_rod_nyloc_nut_M4: 0.715 mm3"
+      ]
     },
     {
       "gate": "Rotating parts never touch stationary parts (min clearance >= 1.5 mm, excl. bearing internals)",
@@ -71,13 +80,13 @@
         "lower_hub_closed_bottom / bearing_support_stationary: 2.00",
         "shaft / bearing_support_stationary: 2.32",
         "shaft_collar / bearing_support_stationary: 2.72",
+        "tie_rod_M4 / bearing_support_stationary: 3.50",
         "thrust_washer_top / bearing_support_stationary: 3.71",
         "thrust_washer_bottom / bearing_support_stationary: 3.71",
         "shaft_collar / rain_baffle_if_needed: 5.90",
         "lower_hub_closed_bottom / roof_flash_adapter: 6.00",
-        "thrust_washer_bottom / rain_baffle_if_needed: 7.95",
-        "shaft / rain_baffle_if_needed: 9.07",
-        "blade_3 / roof_flash_adapter: 13.32"
+        "tie_rod_washer_M4 / rain_baffle_if_needed: 7.75",
+        "thrust_washer_bottom / rain_baffle_if_needed: 7.95"
       ]
     },
     {
@@ -86,16 +95,20 @@
       "value": 6.0
     },
     {
-      "gate": "Blade-to-blade clearance (no collision incl. bow)",
+      "gate": "Blade-to-blade air channel >= 10 mm (cupped blades, no collision)",
       "pass": true,
-      "value": 51.22
+      "value": 11.52
+    },
+    {
+      "gate": "Closed blade ring: plan coverage >= 100 % (no straight line of sight through the ring)",
+      "pass": true,
+      "value": 100.3
     },
     {
       "gate": "Blade-to-stationary clearance",
       "pass": true,
       "value": [
-        "blade_1/roof_flash_adapter: 13.3",
-        "blade_1/bearing_support_stationary: 15.1"
+        "blade_1/roof_flash_adapter: 21.0"
       ]
     },
     {
@@ -116,9 +129,9 @@
         "upper_top_face_holes": 0,
         "lower_bottom_faces": 1,
         "upper_pocket_to_top_face": 3.5,
-        "upper_pocket_to_OD": 3.48403502066763,
+        "upper_pocket_to_OD": 5.598171861890772,
         "lower_pocket_to_bottom_face": 3.5,
-        "lower_pocket_to_OD_excluding_weep": 3.48403502066763
+        "lower_pocket_to_OD_excluding_weep": 5.598171861890772
       }
     },
     {
@@ -126,18 +139,20 @@
       "pass": true,
       "value": {
         "upper_pocket_to_top_face": 3.5,
-        "upper_pocket_to_OD": 3.484,
+        "upper_pocket_to_OD": 5.598,
         "lower_pocket_to_bottom_face": 3.5,
-        "lower_pocket_to_OD_excluding_weep": 3.484
+        "lower_pocket_to_OD_excluding_weep": 5.598
       }
     },
     {
-      "gate": "Hex-key access to both hub set screws through blade gaps",
+      "gate": "Fixings reachable with the closed blade ring: lower set screw before blades, tie-rod nut from below the tower",
       "pass": true,
       "value": {
-        "upper_key_path_min_clearance_to_blades": 13.655118394204942,
+        "lower_screw_key_path_clear_before_blades": 32.2,
         "lower_screw_above_chimney_top": 2.5,
-        "lower_key_path_min_clearance_to_blades": 10.132249193697259
+        "tie_rod_nut_below_tower_bottom": 12.84,
+        "tie_rod_top_clear_of_blind_bore_top": 2.2,
+        "tie_rod_nut_to_stationary_support": 13.58
       }
     },
     {
@@ -177,6 +192,54 @@
           0.0
         ],
         [
+          "insert blade 9 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 10 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 11 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 12 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 13 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 14 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 15 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 16 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 17 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 18 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 19 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
+          "insert blade 20 into lower hub (vertical drop 12 mm)",
+          0.0
+        ],
+        [
           "lower upper hub onto 8 upper tabs (vertical, 14 mm travel)",
           0.0
         ]
@@ -188,23 +251,23 @@
       "value": [
         [
           "blade 1 lifted 0.6 mm with hubs fixed (should COLLIDE = trapped)",
-          6.95
+          20.31
         ],
         [
           "blade 1 pushed 1.0 mm radially outward (should COLLIDE = trapped)",
-          70.4
+          114.78
         ]
       ]
     },
     {
       "gate": "Installed height <= 190.5 mm",
       "pass": true,
-      "value": 165.24
+      "value": 169.7
     },
     {
       "gate": "Assembly CAD top equals reported installed height",
       "pass": true,
-      "value": 165.243
+      "value": 169.7
     },
     {
       "gate": "Rotor clears roof surface by >= 6 mm (at modelled pitch)",
@@ -222,16 +285,16 @@
         [
           "upper_hub_closed_top",
           [
-            188.0,
-            188.0,
+            248.0,
+            248.0,
             37.0
           ]
         ],
         [
           "lower_hub_closed_bottom",
           [
-            188.0,
-            188.0,
+            248.0,
+            248.0,
             48.0
           ]
         ],
@@ -280,7 +343,7 @@
     {
       "gate": "Shaft length fits user's 209.55 mm tube (if bearings accept it)",
       "pass": true,
-      "value": 201.8
+      "value": 198.76
     },
     {
       "gate": "All STL meshes watertight, manifold, single body, volume within 1 %, on bed",
@@ -289,16 +352,16 @@
     }
   ],
   "forming_die": {
-    "die_sagitta": 19.5,
-    "die_cap_separation": 118.12,
-    "springback_factor": 1.3
+    "die_bend_radius": 33.33,
+    "cup_radius_target": 45.0,
+    "springback_factor": 1.35
   },
   "roof_pitch_table": [
     {
       "pitch": "0in12",
       "deg": 0.0,
       "collar_top_at_axis": 14.0,
-      "installed_height": 165.2,
+      "installed_height": 169.7,
       "within_190p5": true,
       "roof_clearance_min": 20.0
     },
@@ -306,72 +369,72 @@
       "pitch": "2in12",
       "deg": 9.46,
       "collar_top_at_axis": 23.1,
-      "installed_height": 174.3,
+      "installed_height": 178.8,
       "within_190p5": true,
-      "roof_clearance_min": 13.4
+      "roof_clearance_min": 8.4
     },
     {
       "pitch": "3in12",
       "deg": 14.04,
-      "collar_top_at_axis": 28.6,
-      "installed_height": 179.9,
+      "collar_top_at_axis": 31.0,
+      "installed_height": 186.7,
       "within_190p5": true,
-      "roof_clearance_min": 11.1
+      "roof_clearance_min": 6.0
     },
     {
       "pitch": "4in12",
       "deg": 18.43,
-      "collar_top_at_axis": 34.2,
-      "installed_height": 185.4,
-      "within_190p5": true,
-      "roof_clearance_min": 8.8
+      "collar_top_at_axis": 41.3,
+      "installed_height": 197.0,
+      "within_190p5": false,
+      "roof_clearance_min": 6.0
     },
     {
       "pitch": "5in12",
       "deg": 22.62,
-      "collar_top_at_axis": 39.8,
-      "installed_height": 191.0,
+      "collar_top_at_axis": 51.7,
+      "installed_height": 207.4,
       "within_190p5": false,
-      "roof_clearance_min": 6.6
+      "roof_clearance_min": 6.0
     }
   ],
   "meshes": [
     {
       "file": "upper_hub_closed_top.stl",
-      "triangles": 5960,
+      "triangles": 8482,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
-      "euler_number": -2,
-      "mesh_volume_mm3": 235676.3,
-      "cad_volume_mm3": 235788.4,
-      "volume_error_pct": -0.048,
+      "euler_number": 0,
+      "mesh_volume_mm3": 370282.3,
+      "cad_volume_mm3": 370451.0,
+      "volume_error_pct": -0.046,
       "extent_mm": [
-        187.98,
-        187.98,
+        247.99,
+        247.98,
         37.0
       ],
       "min_z": 0.0,
       "fits_bed": true,
-      "unsupported_down_area_mm2": 14.9,
-      "unsupported_max_height_mm": 27.2,
+      "unsupported_down_area_mm2": 79.2,
+      "unsupported_max_height_mm": 12.0,
       "pass": true
     },
     {
       "file": "lower_hub_closed_bottom.stl",
-      "triangles": 5724,
+      "triangles": 8140,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
-      "euler_number": -28,
-      "mesh_volume_mm3": 234331.5,
-      "cad_volume_mm3": 234519.3,
-      "volume_error_pct": -0.08,
+      "euler_number": -52,
+      "mesh_volume_mm3": 477042.8,
+      "cad_volume_mm3": 477397.1,
+      "volume_error_pct": -0.074,
       "extent_mm": [
-        187.97,
-        187.98,
+        247.94,
+        247.97,
         48.0
       ],
       "min_z": 0.0,
@@ -470,61 +533,61 @@
     },
     {
       "file": "blade_forming_die_lower.stl",
-      "triangles": 30358,
+      "triangles": 212,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
       "euler_number": 2,
-      "mesh_volume_mm3": 302871.2,
-      "cad_volume_mm3": 302785.0,
-      "volume_error_pct": 0.028,
+      "mesh_volume_mm3": 151389.3,
+      "cad_volume_mm3": 151451.8,
+      "volume_error_pct": -0.041,
       "extent_mm": [
-        144.72,
-        69.75,
-        47.1
+        151.7,
+        46.11,
+        27.32
       ],
       "min_z": 0.0,
       "fits_bed": true,
-      "unsupported_down_area_mm2": 1.2,
-      "unsupported_max_height_mm": 18.0,
+      "unsupported_down_area_mm2": 0.0,
+      "unsupported_max_height_mm": 0.0,
       "pass": true
     },
     {
       "file": "blade_forming_die_upper.stl",
-      "triangles": 34870,
+      "triangles": 220,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
-      "euler_number": 2,
-      "mesh_volume_mm3": 277399.6,
-      "cad_volume_mm3": 277702.4,
-      "volume_error_pct": -0.109,
+      "euler_number": -6,
+      "mesh_volume_mm3": 141475.2,
+      "cad_volume_mm3": 141406.9,
+      "volume_error_pct": 0.048,
       "extent_mm": [
-        132.12,
-        57.15,
-        45.5
+        151.7,
+        46.11,
+        26.76
       ],
       "min_z": 0.0,
       "fits_bed": true,
-      "unsupported_down_area_mm2": 2.4,
-      "unsupported_max_height_mm": 45.5,
+      "unsupported_down_area_mm2": 0.0,
+      "unsupported_max_height_mm": 0.0,
       "pass": true
     },
     {
       "file": "single_blade_socket_test_top.stl",
-      "triangles": 3772,
+      "triangles": 3836,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
       "euler_number": 2,
-      "mesh_volume_mm3": 6788.9,
-      "cad_volume_mm3": 6788.9,
-      "volume_error_pct": 0.0,
+      "mesh_volume_mm3": 7347.1,
+      "cad_volume_mm3": 7347.0,
+      "volume_error_pct": 0.002,
       "extent_mm": [
-        26.73,
+        28.85,
         22.0,
         12.0
       ],
@@ -536,17 +599,17 @@
     },
     {
       "file": "single_blade_socket_test_bottom.stl",
-      "triangles": 5434,
+      "triangles": 5530,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
       "euler_number": 0,
-      "mesh_volume_mm3": 6779.2,
-      "cad_volume_mm3": 6779.1,
-      "volume_error_pct": 0.0,
+      "mesh_volume_mm3": 7332.2,
+      "cad_volume_mm3": 7331.8,
+      "volume_error_pct": 0.004,
       "extent_mm": [
-        26.73,
+        28.85,
         22.0,
         12.0
       ],
@@ -558,15 +621,15 @@
     },
     {
       "file": "slot_clearance_coupon_1p85_1p95_2p05_2p15.stl",
-      "triangles": 15622,
+      "triangles": 15878,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
       "euler_number": 2,
-      "mesh_volume_mm3": 40517.7,
+      "mesh_volume_mm3": 40518.2,
       "cad_volume_mm3": 40517.7,
-      "volume_error_pct": 0.0,
+      "volume_error_pct": 0.001,
       "extent_mm": [
         102.0,
         34.0,
@@ -646,18 +709,18 @@
     },
     {
       "file": "lower_hub_SOLID_DISC_ALTERNATE_not_recommended.stl",
-      "triangles": 3906,
+      "triangles": 6322,
       "watertight": true,
       "winding_consistent": true,
       "is_volume": true,
       "bodies": 1,
-      "euler_number": -18,
-      "mesh_volume_mm3": 342023.8,
-      "cad_volume_mm3": 342234.3,
-      "volume_error_pct": -0.062,
+      "euler_number": -42,
+      "mesh_volume_mm3": 584735.1,
+      "cad_volume_mm3": 585112.1,
+      "volume_error_pct": -0.064,
       "extent_mm": [
-        187.97,
-        187.98,
+        247.94,
+        247.97,
         48.0
       ],
       "min_z": 0.0,
@@ -718,18 +781,18 @@
       "is_volume": true,
       "bodies": 1,
       "euler_number": -22,
-      "mesh_volume_mm3": 175576.5,
-      "cad_volume_mm3": 175640.6,
+      "mesh_volume_mm3": 182731.2,
+      "cad_volume_mm3": 182797.2,
       "volume_error_pct": -0.036,
       "extent_mm": [
         234.23,
         234.22,
-        44.54
+        46.84
       ],
       "min_z": 0.0,
       "fits_bed": true,
       "unsupported_down_area_mm2": 2217.0,
-      "unsupported_max_height_mm": 39.1,
+      "unsupported_max_height_mm": 41.4,
       "pass": true
     },
     {
@@ -740,18 +803,18 @@
       "is_volume": true,
       "bodies": 1,
       "euler_number": -22,
-      "mesh_volume_mm3": 194699.6,
-      "cad_volume_mm3": 194751.9,
+      "mesh_volume_mm3": 216289.0,
+      "cad_volume_mm3": 216347.4,
       "volume_error_pct": -0.027,
       "extent_mm": [
         237.23,
         237.22,
-        54.27
+        61.07
       ],
       "min_z": -0.0,
       "fits_bed": true,
       "unsupported_down_area_mm2": 2216.1,
-      "unsupported_max_height_mm": 48.3,
+      "unsupported_max_height_mm": 55.1,
       "pass": true
     },
     {
@@ -762,29 +825,29 @@
       "is_volume": true,
       "bodies": 1,
       "euler_number": -22,
-      "mesh_volume_mm3": 214661.2,
-      "cad_volume_mm3": 214718.9,
+      "mesh_volume_mm3": 250443.7,
+      "cad_volume_mm3": 250510.6,
       "volume_error_pct": -0.027,
       "extent_mm": [
         240.89,
         240.88,
-        63.32
+        74.28
       ],
       "min_z": -0.0,
       "fits_bed": true,
       "unsupported_down_area_mm2": 2216.1,
-      "unsupported_max_height_mm": 56.8,
+      "unsupported_max_height_mm": 67.8,
       "pass": true
     }
   ],
   "filament_estimate_g_PETG": [
     [
       "upper_hub_closed_top",
-      164.7
+      258.8
     ],
     [
       "lower_hub_closed_bottom",
-      163.8
+      333.5
     ],
     [
       "thrust_washer_top",
@@ -813,8 +876,10 @@
     "Pocket width 1.95 mm is a placeholder until the 1.85/1.95/2.05/2.15 coupon is tested with your actual aluminium.",
     "Bearing seat bore 15.95 mm and hub shaft bore 6.55 mm are placeholders until the bearing/shaft fit coupon is tested.",
     "Bearing bore not verified: confirm the R4-2RS markings and that the chosen shaft slips through both inner races without force.",
-    "Forming-die springback factor 1.30 is a first guess; the alloy/temper of the 1.6 mm sheet is unknown.",
-    "Cap separation 121.24 mm assumes the formed bow equals 15.0 mm; actual separation is set at assembly by seating the upper hub on the blade shoulders.",
+    "Forming-die springback factor 1.35 is a first guess; the alloy/temper of the 1.6 mm sheet is unknown.",
+    "Cap separation 125.70 mm = blank body length; cut blanks to length within +/-0.2 mm. The tie rod pulls the upper hub onto the shoulders, so small length differences are taken up as light compression.",
+    "Cup radius 45 mm: the 1:1 cup gauge checks it; 20 blades need 5 pieces of 11.75 x 3.75 in stock (4 blanks per piece).",
+    "Shaft must be HOLLOW (your 1/4 in tube, ID 4.54) so the M4 tie rod passes; verify the tube slips into both bearings.",
     "Airflow, rpm and rain ingress are not predicted by this CAD; they must be measured (spec gates E and F)."
   ],
   "all_gates_pass": true

@@ -48,7 +48,7 @@ def build(P, D, include_tray=True):
         items.append(Item(f"blade_{i + 1}", g.blade(i, P, D), "rotating", "blade",
                           material="1.6 mm aluminium sheet", explode=45, group="blade"))
     items.append(Item("shaft", g.shaft(P, D), "purchased-rotating", "shaft",
-                      material="1/4 in (6.35 mm) stainless rod, or user tube if it fits the bearings",
+                      material="1/4 in x 0.035 in wall stainless tube (user's tube if it slips into the bearings)",
                       explode=-60))
     wt, wb = g.washers(P, D)
     items.append(Item("thrust_washer_top", wt, "rotating", "hardware", printable=True,
@@ -57,11 +57,15 @@ def build(P, D, include_tray=True):
                       material="PETG-HF", print_pose=lambda s: on_bed(s), explode=-75))
     items.append(Item("shaft_collar", g.shaft_collar(P, D), "purchased-rotating", "hardware",
                       material="1/4 in bore set-screw shaft collar", explode=-85))
-    for tag, z in (("upper", D["z_upper_set_screw"]), ("lower", D["z_lower_set_screw"])):
-        nut, screw = g.nut_and_screw(P, D, z, tag == "upper")
-        ex = 95 if tag == "upper" else 0
-        items.append(Item(f"{tag}_hub_nut_M4", nut, "purchased-rotating", "hardware", explode=ex))
-        items.append(Item(f"{tag}_hub_set_screw_M4", screw, "purchased-rotating", "hardware", explode=ex))
+    nut, screw = g.nut_and_screw(P, D, D["z_lower_set_screw"], False)
+    items.append(Item("lower_hub_nut_M4", nut, "purchased-rotating", "hardware", explode=0))
+    items.append(Item("lower_hub_set_screw_M4", screw, "purchased-rotating", "hardware", explode=0))
+    rod, top_nut, washer, bot_nut = g.tie_rod_parts(P, D)
+    items.append(Item("tie_rod_M4", rod, "purchased-rotating", "hardware", explode=-100,
+                      notes="M4 A2 threaded rod through the hollow shaft"))
+    items.append(Item("tie_rod_upper_captive_nut_M4", top_nut, "purchased-rotating", "hardware", explode=95))
+    items.append(Item("tie_rod_washer_M4", washer, "purchased-rotating", "hardware", explode=-100))
+    items.append(Item("tie_rod_nyloc_nut_M4", bot_nut, "purchased-rotating", "hardware", explode=-100))
     for tag, zc in (("upper", D["z_upper_bearing_center"]), ("lower", D["z_lower_bearing_center"])):
         inner, outer, seal = g.bearing(P, zc)
         items.append(Item(f"bearing_{tag}_inner_race", inner, "purchased-rotating", "bearing", explode=-30))

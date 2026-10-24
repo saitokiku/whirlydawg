@@ -112,7 +112,9 @@ def build(args):
     gate("Lower hub face to stationary collar/support axial gap = 6 mm", abs(lh_gap - 6.0) < 1e-6, lh_gap)
     log("checks: blades")
     nb, brow = C.blade_clearances(items, P)
-    gate("Blade-to-blade clearance (no collision incl. bow)", nb > 5.0, round(nb, 2))
+    gate("Blade-to-blade air channel >= 10 mm (cupped blades, no collision)", nb >= 10.0, round(nb, 2))
+    gate("Closed blade ring: plan coverage >= 100 % (no straight line of sight through the ring)",
+         D["plan_coverage_fraction"] >= 1.0, round(100 * D["plan_coverage_fraction"], 1))
     gate("Blade-to-stationary clearance", min(r[2] for r in brow) > 5.0, [f"{a}/{b}: {d:.1f}" for a, b, d in brow])
     tp = C.tab_in_pocket(P, D)
     gate("Tab fits pocket with clearance on all sides and does not bottom out",
@@ -128,8 +130,10 @@ def build(args):
          {k: round(v, 3) for k, v in pb.items() if isinstance(v, float)})
     log("checks: access + assembly sequence")
     ac = C.access_check(items, P, D)
-    gate("Hex-key access to both hub set screws through blade gaps",
-         min(ac["upper_key_path_min_clearance_to_blades"], ac["lower_key_path_min_clearance_to_blades"]) > 2.0, ac)
+    gate("Fixings reachable with the closed blade ring: lower set screw before blades, tie-rod nut from below the tower",
+         ac["lower_screw_key_path_clear_before_blades"] > 2.0 and ac["lower_screw_above_chimney_top"] >= 0
+         and ac["tie_rod_nut_below_tower_bottom"] > 0 and ac["tie_rod_top_clear_of_blind_bore_top"] > 0.5
+         and ac["tie_rod_nut_to_stationary_support"] > 1.0, {k: round(v, 2) for k, v in ac.items()})
     seq = C.assembly_sequence(P, D, items)
     free = [s for s in seq if "should COLLIDE" not in s[0]]
     trap = [s for s in seq if "should COLLIDE" in s[0]]
@@ -168,7 +172,7 @@ def build(args):
 
     # tooling, coupons, extras
     extras = {}
-    lower_die, upper_die, s_die, H_die = g.forming_dies(P, D)
+    lower_die, upper_die, R_die, H_die = g.forming_dies(P, D)
     extras["blade_forming_die_lower"] = (lower_die, lambda s: A.on_bed(s))
     extras["blade_forming_die_upper"] = (upper_die, lambda s: A.on_bed(s, flip=True))
     extras["single_blade_socket_test_top"] = (g.socket_coupon(P, D, "top"), lambda s: A.on_bed(s, flip=True))
@@ -178,7 +182,7 @@ def build(args):
     extras["shaft_dimple_drill_guide"] = (g.drill_guide(P), lambda s: A.on_bed(s))
     extras["inlet_vent_louver"] = (g.inlet_louver(P), lambda s: A.on_bed(s))
     extras["lower_hub_SOLID_DISC_ALTERNATE_not_recommended"] = (g.lower_hub(P, D, solid_variant=True), lambda s: A.on_bed(s))
-    report["forming_die"] = {"die_sagitta": round(s_die, 2), "die_cap_separation": round(H_die, 2),
+    report["forming_die"] = {"die_bend_radius": round(R_die, 2), "cup_radius_target": P["blade"]["cup_radius"],
                              "springback_factor": P["forming_die"]["springback_factor"]}
     for name, (shape, _) in extras.items():
         export_step(colored(shape, "tool" if "die" in name or "guide" in name else "rotor", name), str(DIRS["step"] / f"{name}.step"))
@@ -217,7 +221,7 @@ def build(args):
 
     log("flat patterns")
     FP.write_dxf(P, D, DIRS["dxf"] / "blade_flat_pattern_single_TEST.dxf", "single")
-    FP.write_dxf(P, D, DIRS["dxf"] / "blade_flat_pattern_8x.dxf", "batch")
+    FP.write_dxf(P, D, DIRS["dxf"] / "blade_flat_pattern_all_blades.dxf", "batch")
     FP.svg_blade(P, D, DIRS["svg"] / "blade_template_1to1.svg")
 
     # mass / filament estimate (PETG 1.27, PAHT-CF 1.2 g/cm3; ~55 % effective fill for 5 walls + 40 % infill)
@@ -264,19 +268,23 @@ def write_bom(P, D, items, fil, path):
     fil = dict(fil)
     rows = [
         ["item", "qty", "type", "spec / size", "material", "est_filament_g", "source", "notes"],
-        ["upper_hub_closed_top", 1, "printed, rotating", "OD %.0f, 8 blind pockets open DOWN, closed top, drip lip" % P["upper_hub"]["od"],
+        ["upper_hub_closed_top", 1, "printed, rotating", "OD %.0f, %d curved blind pockets open DOWN, closed top, drip lip" % (P["upper_hub"]["od"], P["blade_count"]),
          "PAHT-CF final (PETG-HF trial)", fil.get("upper_hub_closed_top"), "print", "top face down on bed"],
-        ["lower_hub_closed_bottom", 1, "printed, rotating", "OD %.0f, 8 blind pockets open UP, weeps, chimney, labyrinth cup" % P["lower_hub"]["od"],
+        ["lower_hub_closed_bottom", 1, "printed, rotating", "OD %.0f, %d curved blind pockets open UP, weeps, chimney, labyrinth cup" % (P["lower_hub"]["od"], P["blade_count"]),
          "PAHT-CF final (PETG-HF trial)", fil.get("lower_hub_closed_bottom"), "print", "bottom down on bed"],
-        ["blade", P["blade_count"], "sheet metal, rotating", "%.2f x %.1f blank, tabs %.0f x %.0f, bow %.0f mm" % (
-            P["blade"]["body_chord"], P["blade"]["blank_length"], P["blade"]["tab_width"], P["blade"]["tab_length"], P["blade"]["bow_sagitta"]),
-         "1.6 mm aluminium", "", "OWNED stock (4 pieces 11.75 x 3.75 in)", "cut 1 test blade first"],
-        ["shaft", 1, "rotating", "6.35 mm (1/4 in) x %.1f mm" % D["shaft_length"], "303/304 stainless precision rod", "",
-         "BUY (or OWNED tube if it slips into bearings)", "2 spot dimples for set screws"],
+        ["blade", P["blade_count"], "sheet metal, rotating", "%.2f x %.1f blank, centred tabs %.0f x %.0f, cupped R%.0f across the width" % (
+            P["blade"]["body_chord"], P["blade"]["blank_length"], P["blade"]["tab_width"], P["blade"]["tab_length"], P["blade"]["cup_radius"]),
+         "1.6 mm aluminium", "", "OWNED stock: %d pieces 11.75 x 3.75 in (4 blanks each)" % math.ceil(P["blade_count"] / 4), "cut 1 test blade first"],
+        ["shaft (hollow tube)", 1, "rotating", "1/4 in OD x 0.035 in wall (ID ~4.5) x %.1f mm" % D["shaft_length"], "304 stainless tube", "",
+         "OWNED tube (209.55 long) if it slips into the bearings, else BUY", "1 spot dimple for the lower set screw"],
+        ["M4 threaded rod (tie rod)", 1, "rotating", "M4 x %.0f mm, A2 stainless" % D["tie_rod_length"], "stainless", "", "BUY",
+         "runs inside the tube; holds the upper hub down"],
+        ["M4 hex nut (captive, upper hub)", 1, "rotating", "DIN 934, 7 AF x 3.2", "stainless", "", "BUY", "slides into the upper hub side slot"],
+        ["M4 nyloc nut + M4 washer", 1, "rotating", "DIN 985 + DIN 125", "stainless", "", "BUY", "under the shaft, tightened from below"],
         ["bearing R4-2RS", 2, "stationary outer / rotating inner", "6.35 x 15.875 x 4.98", "steel, sealed", "", "OWNED", "verify bore marking"],
         ["shaft collar 1/4 in bore", 1, "rotating", "OD ~12.7, width ~7.9, set screw", "steel / stainless", "", "BUY", "below lower bearing"],
-        ["set screw M4 x 6 cup point", 2, "rotating", "A2 stainless + medium threadlocker", "stainless", "", "BUY", "one per hub, into shaft dimple"],
-        ["hex nut M4 DIN 934", 2, "rotating", "7 AF x 3.2", "stainless", "", "BUY", "drops into hub nut slot"],
+        ["set screw M4 x 6 cup point", 1, "rotating", "A2 stainless + medium threadlocker", "stainless", "", "BUY", "lower hub only, into shaft dimple"],
+        ["hex nut M4 DIN 934", 1, "rotating", "7 AF x 3.2", "stainless", "", "BUY", "drops into lower hub nut slot"],
         ["thrust_washer_top / bottom", 2, "printed, rotating", "OD %.1f ID 6.5, t 2.0 / 1.5" % P["bearings"]["inner_race_land_od"],
          "PETG-HF", round((fil.get("thrust_washer_top") or 0) + (fil.get("thrust_washer_bottom") or 0), 1), "print",
          "contacts bearing INNER race only"],

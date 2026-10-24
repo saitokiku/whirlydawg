@@ -137,13 +137,8 @@
           1
         ],
         [
-          "set_screw_hole",
-          4.4,
-          1
-        ],
-        [
           "outer_diameter",
-          188.0,
+          248.0,
           1
         ]
       ],
@@ -175,7 +170,7 @@
         ],
         [
           "outer_diameter",
-          188.0,
+          248.0,
           1
         ]
       ],
@@ -257,8 +252,8 @@
     }
   },
   "step_round_trip": {
-    "solids_model": 27,
-    "solids_step": 27,
+    "solids_model": 41,
+    "solids_step": 41,
     "volumes_match": true
   },
   "all_valid": true,

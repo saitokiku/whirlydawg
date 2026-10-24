@@ -23,33 +23,27 @@ def load_inputs(path: Path = PARAM_FILE) -> dict:
         return json.load(f)["inputs"]
 
 
-# ---------------------------------------------------------------- blade bow --
-def bow_offset(z: np.ndarray | float, s: float, H: float):
-    """Normal offset of the blade mid-surface at height z above the lower cap face."""
-    return s * np.sin(np.pi * np.asarray(z) / H) ** 2
+# ---------------------------------------------------------------- blade cup --
+# The blade is straight vertically and curved across its width (in plan) on cup_radius Rc,
+# like a traditional turbine-vent vane. s = arc length across the width measured from the tab
+# centre T; positive s runs along the chord direction c (outward). The cup centre of curvature
+# is C = T + k*Rc*n (k = cup_direction), so the concave face looks toward +k*n.
 
 
-def bow_slope(z, s, H):
-    return s * np.pi / H * np.sin(2 * np.pi * np.asarray(z) / H)
+def arc_point(T, c, n, k, Rc, s, off=0.0):
+    """Global XY of the point at arc length s from T, offset `off` away from the cup centre."""
+    phi = np.asarray(s, float) / Rc
+    C = T + k * Rc * n
+    R = Rc + off
+    return C + np.multiply.outer(R * np.sin(phi), c) - np.multiply.outer(k * R * np.cos(phi), n)
 
 
-def bow_arc_length(s: float, H: float, n: int = 4001) -> float:
-    z = np.linspace(0.0, H, n)
-    return float(np.trapezoid(np.sqrt(1.0 + bow_slope(z, s, H) ** 2), z))
-
-
-def solve_cap_separation(developed_length: float, s: float) -> float:
-    """Projected (vertical) distance between the two shoulders for a given flat length."""
-    if s <= 0:
-        return developed_length
-    lo, hi = developed_length * 0.6, developed_length
-    for _ in range(80):
-        mid = 0.5 * (lo + hi)
-        if bow_arc_length(s, mid) > developed_length:
-            hi = mid
-        else:
-            lo = mid
-    return 0.5 * (lo + hi)
+def cup_geometry(P):
+    B = P["blade"]
+    Rc, W = B["cup_radius"], B["body_chord"]
+    ang = W / Rc
+    return {"cup_angle_deg": math.degrees(ang), "cup_chord": 2 * Rc * math.sin(ang / 2),
+            "cup_depth": Rc * (1 - math.cos(ang / 2))}
 
 
 # ------------------------------------------------------------- plan layout --
@@ -64,20 +58,20 @@ def blade_frame(i: int, P: dict, D: dict):
     return T, c, n
 
 
-def blade_points(i: int, P: dict, D: dict, nu: int = 40, nz: int = 61):
-    """Sample both faces of blade i body (no tabs). Returns array (k, 3)."""
+def blade_plan_points(i: int, P: dict, D: dict, ns: int = 121):
+    """Plan (XY) samples of both faces of blade i body. Returns array (k, 2)."""
     T, c, n = blade_frame(i, P, D)
-    t = P["blade"]["thickness"]
-    u = np.linspace(D["blade_u_inner"], D["blade_u_outer"], nu)
-    z = np.linspace(0, D["cap_separation"], nz)
-    U, Z = np.meshgrid(u, z)
-    pts = []
-    for side in (-0.5, 0.5):
-        d = bow_offset(Z, P["blade"]["bow_sagitta"], D["cap_separation"]) + side * t
-        X = T[0] + U * c[0] + d * n[0]
-        Y = T[1] + U * c[1] + d * n[1]
-        pts.append(np.stack([X.ravel(), Y.ravel(), (Z + D["z_lower_face"]).ravel()], 1))
-    return np.concatenate(pts)
+    B = P["blade"]
+    sv = np.linspace(D["blade_u_inner"], D["blade_u_outer"], ns)
+    return np.concatenate([arc_point(T, c, n, B["cup_direction"], B["cup_radius"], sv, off)
+                           for off in (-B["thickness"] / 2, 0.0, B["thickness"] / 2)])
+
+
+def blade_points(i: int, P: dict, D: dict, ns: int = 61, nz: int = 5):
+    """3-D samples of blade i body faces (blade is vertical, so z only repeats the plan)."""
+    xy = blade_plan_points(i, P, D, ns)
+    zs = np.linspace(0, D["cap_separation"], nz) + D["z_lower_face"]
+    return np.concatenate([np.column_stack([xy, np.full(len(xy), z)]) for z in zs])
 
 
 def roof_lift(P: dict, r_hub: float, r_blade_bottom: float) -> tuple[float, dict]:
@@ -100,30 +94,30 @@ def derive(P: dict) -> dict:
     BR, S, HF = P["bearings"], P["stationary"], P["hub_fixing"]
     D: dict = {}
 
-    # blade developed geometry
+    # blade developed geometry (no vertical bow: the shoulders are one blank-body length apart)
     dev = B["blank_length"] - 2 * B["tab_length"]
     D["blade_developed_body_length"] = dev
-    H = solve_cap_separation(dev, B["bow_sagitta"])
+    H = dev
     D["cap_separation"] = H
     D["blade_u_inner"] = -(B["tab_inner_margin"] + B["tab_width"] / 2)
     D["blade_u_outer"] = D["blade_u_inner"] + B["body_chord"]
     D["tab_u_range"] = [-B["tab_width"] / 2, B["tab_width"] / 2]
-    D["bow_max_slope_deg"] = math.degrees(math.atan(B["bow_sagitta"] * math.pi / H))
-    D["bow_min_bend_radius"] = H ** 2 / (2 * math.pi ** 2 * B["bow_sagitta"]) if B["bow_sagitta"] else None
+    D.update(cup_geometry(P))
     D["pocket_length"] = B["tab_width"] + K["length_clearance_total"]
     D["tab_bottom_clearance_in_pocket"] = K["depth"] - B["tab_length"]
 
-    # pocket shell check (outermost pocket corner incl. mouth chamfer)
+    # pocket shell check (outermost pocket point incl. mouth lead-in; pocket follows the cup arc)
     T, c, n = blade_frame(0, P, D)
-    corners = []
-    for su in (-1, 1):
-        for sn in (-1, 1):
-            corners.append(T + su * (D["pocket_length"] / 2 + K["mouth_end_chamfer"]) * c
-                           + sn * (K["width"] / 2 + K["mouth_side_lead_in"]) * n)
-            corners.append(T + su * (D["pocket_length"] / 2) * c + sn * (K["width"] / 2) * n)
-    r_pocket_max = max(float(np.hypot(*p)) for p in corners)
-    r_pocket_max_deep = max(float(np.hypot(*(T + su * D["pocket_length"] / 2 * c + sn * K["width"] / 2 * n)))
-                            for su in (-1, 1) for sn in (-1, 1))
+    k, Rc = B["cup_direction"], B["cup_radius"]
+    Lp = D["pocket_length"]
+    mouth = arc_point(T, c, n, k, Rc, np.linspace(-Lp / 2 - K["mouth_end_chamfer"], Lp / 2 + K["mouth_end_chamfer"], 41),
+                      0.0)
+    mouth = np.concatenate([arc_point(T, c, n, k, Rc, np.linspace(-Lp / 2 - K["mouth_end_chamfer"], Lp / 2 + K["mouth_end_chamfer"], 41), o)
+                            for o in (-(K["width"] / 2 + K["mouth_side_lead_in"]), K["width"] / 2 + K["mouth_side_lead_in"])])
+    deep = np.concatenate([arc_point(T, c, n, k, Rc, np.linspace(-Lp / 2, Lp / 2, 41), o)
+                           for o in (-K["width"] / 2, K["width"] / 2)])
+    r_pocket_max = float(np.hypot(*mouth.T).max())
+    r_pocket_max_deep = float(np.hypot(*deep.T).max())
     D["pocket_outer_radius_at_mouth"] = r_pocket_max
     D["pocket_outer_radius_below_lead_in"] = r_pocket_max_deep
     D["upper_hub_shell_outside_pocket"] = UH["od"] / 2 - r_pocket_max          # at the chamfered mouth (worst)
@@ -132,14 +126,13 @@ def derive(P: dict) -> dict:
     D["upper_hub_roof_over_pocket"] = UH["thickness"] - K["depth"]
     D["lower_hub_floor_under_pocket"] = LH["thickness"] - K["depth"]
 
-    # where the blade bottom edge reaches (end of chord, at the cap faces)
-    p_out = T + D["blade_u_outer"] * c
-    p_in = T + D["blade_u_inner"] * c
-    D["blade_end_outer_radius"] = float(np.hypot(*p_out))
-    D["blade_end_inner_radius"] = float(np.hypot(*p_in))
+    # where the blade edges are
+    D["blade_end_outer_radius"] = float(np.hypot(*arc_point(T, c, n, k, Rc, D["blade_u_outer"])))
+    D["blade_end_inner_radius"] = float(np.hypot(*arc_point(T, c, n, k, Rc, D["blade_u_inner"])))
 
     # vertical stack (roof surface at axis = 0)
-    z_ct, lift_terms = roof_lift(P, LH["od"] / 2, D["blade_end_outer_radius"] + B["thickness"])
+    r_blade_max = float(np.hypot(*blade_plan_points(0, P, D).T).max())
+    z_ct, lift_terms = roof_lift(P, LH["od"] / 2, r_blade_max)
     D["roof_lift_terms"] = lift_terms
     gap = S["rotor_to_stationary_axial_gap"]
     D["z_collar_top"] = z_ct
@@ -162,12 +155,17 @@ def derive(P: dict) -> dict:
     D["z_collar_bottom_face"] = D["z_collar_top_face"] - S["shaft_collar_width"]
     D["z_shaft_bottom"] = D["z_collar_bottom_face"] - SH["below_collar_extension"]
     D["z_upper_bore_top"] = D["z_upper_face"] + UH["thickness"] - D["upper_hub_roof_over_pocket"]
-    D["z_shaft_top"] = D["z_upper_bore_top"] - SH["top_clearance_in_blind_bore"]
+    # upper hub is held down by an M4 tie rod through the hollow shaft into a captive nut
+    D["z_upper_nut_bottom"] = D["z_upper_face"] + HF["upper_nut_bottom_above_face"]
+    D["z_upper_nut_top"] = D["z_upper_nut_bottom"] + 3.2
+    D["z_shaft_top"] = D["z_upper_nut_bottom"] - SH["top_gap_below_upper_nut"]
     D["shaft_length"] = D["z_shaft_top"] - D["z_shaft_bottom"]
     D["shaft_fits_user_tube_length"] = D["shaft_length"] <= SH["user_tube_length"]
-    D["z_upper_set_screw"] = D["z_upper_face"] - HF["upper_screw_below_face"]
+    D["z_tie_rod_top"] = D["z_upper_nut_top"] + HF["tie_rod_above_upper_nut"]
+    D["z_tie_rod_bottom"] = D["z_shaft_bottom"] - HF["tie_rod_below_tube"]
+    D["tie_rod_length"] = D["z_tie_rod_top"] - D["z_tie_rod_bottom"]
+    D["tie_rod_top_clear_of_bore_top"] = D["z_upper_bore_top"] - D["z_tie_rod_top"]
     D["z_lower_set_screw"] = D["z_lower_face"] + HF["lower_screw_above_face"]
-    D["set_screw_axis_spacing"] = D["z_upper_set_screw"] - D["z_lower_set_screw"]
     D["z_lower_boss_top"] = D["z_lower_face"] + LH["boss_top_above_face"]
     D["z_upper_boss_bottom"] = D["z_upper_face"] - UH["boss_length_below_face"]
     D["z_chimney_top"] = D["z_lower_face"] + LH["chimney_height_above_face"]
@@ -175,26 +173,18 @@ def derive(P: dict) -> dict:
     D["tower_length"] = D["z_tower_top"] - D["z_tower_bottom"]
     D["tower_below_roof"] = -D["z_tower_bottom"]
 
-    # rotor envelope
-    pts = blade_points(0, P, D)
-    r = np.hypot(pts[:, 0], pts[:, 1])
+    # rotor envelope, neighbour clearance (blades are vertical: one plan slice is exact)
+    xy0 = blade_plan_points(0, P, D)
+    xy1 = blade_plan_points(1, P, D)
+    r = np.hypot(xy0[:, 0], xy0[:, 1])
     D["rotor_od_actual"] = float(2 * r.max())
-    D["rotor_od_at_cap_faces"] = float(2 * (np.hypot(*p_out) + 0))
+    D["rotor_od_at_cap_faces"] = D["rotor_od_actual"]
     D["rotor_od_vs_target"] = D["rotor_od_actual"] - P["rotor_target_od"]
     D["blade_inner_radius_min"] = float(r.min())
-
-    # neighbour clearance (sampled) and plan coverage
-    p1 = blade_points(1, P, D, nu=60, nz=81)
-    p0 = blade_points(0, P, D, nu=60, nz=81)
-    best = 1e9
-    for zv in np.unique(p0[:, 2])[::2]:
-        a = p0[np.isclose(p0[:, 2], zv)][:, :2]
-        b = p1[np.isclose(p1[:, 2], zv)][:, :2]
-        if len(a) and len(b):
-            dmin = np.sqrt(((a[:, None, :] - b[None, :, :]) ** 2).sum(-1)).min()
-            best = min(best, float(dmin))
-    D["neighbour_min_clearance_sampled"] = best
-    az = np.degrees(np.arctan2(pts[:, 1], pts[:, 0]))
+    D["blade_ring_radial_band"] = [float(r.min()), float(r.max())]
+    D["neighbour_min_clearance_sampled"] = float(np.sqrt(((xy0[:, None, :] - xy1[None, :, :]) ** 2).sum(-1)).min())
+    D["air_channel_width_between_blades"] = D["neighbour_min_clearance_sampled"]
+    az = np.degrees(np.arctan2(xy0[:, 1], xy0[:, 0]))
     D["blade_plan_angular_span_deg"] = float(az.max() - az.min())
     D["plan_coverage_fraction"] = D["blade_plan_angular_span_deg"] / (360.0 / P["blade_count"])
 
@@ -226,7 +216,9 @@ def unresolved(P: dict, D: dict) -> list[str]:
         "Bearing seat bore %.2f mm and hub shaft bore %.2f mm are placeholders until the bearing/shaft fit coupon is tested." % (P["bearings"]["seat_bore_diameter"], P["shaft"]["hub_bore_diameter"]),
         "Bearing bore not verified: confirm the R4-2RS markings and that the chosen shaft slips through both inner races without force.",
         "Forming-die springback factor %.2f is a first guess; the alloy/temper of the 1.6 mm sheet is unknown." % P["forming_die"]["springback_factor"],
-        "Cap separation %.2f mm assumes the formed bow equals %.1f mm; actual separation is set at assembly by seating the upper hub on the blade shoulders." % (D["cap_separation"], P["blade"]["bow_sagitta"]),
+        "Cap separation %.2f mm = blank body length; cut blanks to length within +/-0.2 mm. The tie rod pulls the upper hub onto the shoulders, so small length differences are taken up as light compression." % D["cap_separation"],
+        "Cup radius %.0f mm: the 1:1 cup gauge checks it; 20 blades need 5 pieces of 11.75 x 3.75 in stock (4 blanks per piece)." % P["blade"]["cup_radius"],
+        "Shaft must be HOLLOW (your 1/4 in tube, ID %.2f) so the M4 tie rod passes; verify the tube slips into both bearings." % P["shaft"]["tube_id"],
         "Airflow, rpm and rain ingress are not predicted by this CAD; they must be measured (spec gates E and F).",
     ]
     if not D["shaft_fits_user_tube_length"]:
@@ -252,6 +244,19 @@ def _round(x):
     if isinstance(x, list):
         return [_round(v) for v in x]
     return x
+
+
+def fit_tab_radius(P: dict, r_tip: float) -> dict:
+    """Copy of P with pocket.tab_center_radius chosen so the outermost blade point sits at r_tip."""
+    Q = copy.deepcopy(P)
+    lo, hi = 40.0, r_tip
+    for _ in range(50):
+        Q["pocket"]["tab_center_radius"] = 0.5 * (lo + hi)
+        D = {"blade_u_inner": -(Q["blade"]["tab_inner_margin"] + Q["blade"]["tab_width"] / 2)}
+        D["blade_u_outer"] = D["blade_u_inner"] + Q["blade"]["body_chord"]
+        r = float(np.hypot(*blade_plan_points(0, Q, D).T).max())
+        lo, hi = (Q["pocket"]["tab_center_radius"], hi) if r < r_tip else (lo, Q["pocket"]["tab_center_radius"])
+    return Q
 
 
 def variant(P: dict, **changes) -> dict:

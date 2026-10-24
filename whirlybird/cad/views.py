@@ -96,19 +96,18 @@ def make_all(P, D, items, outdir, extras=None):
             R.render([(it.print_pose(it.shape), it.color, 1.0)], outdir / f"print_{it.name}.png", "iso",
                      size=(1000, 800), zoom=1.2)
 
-    # 8 / 10 / 12 comparison (same blade envelope, real CAD)
-    for nbl in (8, 10, 12):
-        Q = variant(P, blade_count=nbl)
-        DQ = derive(Q)
+    # 16 / 20 / 24 comparison (same cupped blade, re-fitted to the same OD), real CAD
+    from study import fitted
+    for nbl in (16, 20, 24):
+        Q, DQ = fitted(P, blade_count=nbl)
         parts = [(g.upper_hub(Q, DQ), "rotor", 1.0), (g.lower_hub(Q, DQ), "rotor", 1.0)]
         parts += [(g.blade(i, Q, DQ), "blade", 1.0) for i in range(nbl)]
         R.render(parts, outdir / f"compare_{nbl}_blades_iso.png", "iso", size=(900, 800), zoom=1.15, title=f"{nbl} blades")
         R.render(parts[1:], outdir / f"compare_{nbl}_blades_top_no_cap.png", "top", size=(900, 800), zoom=1.1,
                  title=f"{nbl} blades (upper hub hidden)")
     # chord-angle variants (plan view, upper hub hidden)
-    for th in (25, 35, 45):
-        Q = variant(P, **{"blade.plan_chord_angle_from_radial": th})
-        DQ = derive(Q)
+    for th in (45, 55, 65):
+        Q, DQ = fitted(P, **{"blade.plan_chord_angle_from_radial": th})
         parts = [(g.lower_hub(Q, DQ), "rotor", 1.0)] + [(g.blade(i, Q, DQ), "blade", 1.0) for i in range(Q["blade_count"])]
         R.render(parts, outdir / f"compare_chord_{th}deg_top.png", "top", size=(900, 800), zoom=1.1,
                  title=f"chord angle {th} deg from radial")

@@ -18,6 +18,7 @@ INTENDED_CONTACT = {
     ("outer_race", "bearing_support"), ("bearing_support", "roof_flash_adapter"),
     ("bearing_support", "rain_baffle"), ("nut", "upper_hub"), ("nut", "lower_hub"),
     ("set_screw", "upper_hub"), ("set_screw", "lower_hub"), ("shaft", "upper_hub"), ("shaft", "lower_hub"),
+    ("tie_rod", "nut"), ("tie_rod", "washer"), ("tie_rod_washer", "shaft"), ("tie_rod", "shaft"),
 }
 
 
@@ -128,18 +129,22 @@ def pocket_blindness(items, P, D):
 
 
 def access_check(items, P, D):
-    """Hex-key line to each set screw must clear every blade (straight radial approach)."""
+    """Fixings must be reachable once the closed blade ring is assembled.
+    Lower-hub set screw: tightened before blades go in (radial line clear of everything but blades).
+    Upper hub: M4 tie rod nut sits below the bearing tower, so it is tightened from underneath."""
     res = {}
     blades = [i.shape for i in items if i.group == "blade"]
-    for tag, z, r0 in (("upper", D["z_upper_set_screw"], P["upper_hub"]["boss_od"] / 2),
-                       ("lower", D["z_lower_set_screw"], P["lower_hub"]["boss_od"] / 2)):
-        key = Rot(0, 0, g.SCREW_AZ) * Pos(r0, 0, z) * Rot(0, 90, 0) * Cylinder(
-            2.5, 150, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        d = min(key.distance_to(b) for b in blades)
-        chim = 0.0
-        if tag == "lower":
-            res["lower_screw_above_chimney_top"] = z - 2.5 - D["z_chimney_top"]
-        res[f"{tag}_key_path_min_clearance_to_blades"] = d
+    others = [i.shape for i in items if i.group != "blade" and "rotating" in i.role and "hub" not in i.name
+              and "tie_rod" not in i.name and "shaft" not in i.name and "set_screw" not in i.name and "nut" not in i.name]
+    key = Rot(0, 0, g.SCREW_AZ) * Pos(P["lower_hub"]["boss_od"] / 2, 0, D["z_lower_set_screw"]) * Rot(0, 90, 0) * Cylinder(
+        2.5, 150, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    res["lower_screw_key_path_clear_before_blades"] = min((key.distance_to(o) for o in others), default=99.0)
+    res["lower_screw_above_chimney_top"] = D["z_lower_set_screw"] - 2.5 - D["z_chimney_top"]
+    res["tie_rod_nut_below_tower_bottom"] = D["z_tower_bottom"] - (D["z_shaft_bottom"] - 1.2)
+    res["tie_rod_top_clear_of_blind_bore_top"] = D["tie_rod_top_clear_of_bore_top"]
+    nut = next(i.shape for i in items if i.name == "tie_rod_nyloc_nut_M4")
+    sup = next(i.shape for i in items if i.name == "bearing_support_stationary")
+    res["tie_rod_nut_to_stationary_support"] = nut.distance_to(sup)
     return res
 
 

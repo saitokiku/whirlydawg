@@ -32,7 +32,7 @@
     {
       "name": "outer_diameter",
       "type": "cylinder",
-      "diameter_mm": 188.0,
+      "diameter_mm": 248.0,
       "diameter_tolerance_mm": 0.06,
       "count": 1
     }

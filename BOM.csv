@@ -1,12 +1,15 @@
 item,qty,type,spec / size,material,est_filament_g,source,notes
-upper_hub_closed_top,1,"printed, rotating","OD 188, 8 blind pockets open DOWN, closed top, drip lip",PAHT-CF final (PETG-HF trial),164.7,print,top face down on bed
-lower_hub_closed_bottom,1,"printed, rotating","OD 188, 8 blind pockets open UP, weeps, chimney, labyrinth cup",PAHT-CF final (PETG-HF trial),163.8,print,bottom down on bed
-blade,8,"sheet metal, rotating","57.15 x 139.7 blank, tabs 14 x 7, bow 15 mm",1.6 mm aluminium,,OWNED stock (4 pieces 11.75 x 3.75 in),cut 1 test blade first
-shaft,1,rotating,6.35 mm (1/4 in) x 201.8 mm,303/304 stainless precision rod,,BUY (or OWNED tube if it slips into bearings),2 spot dimples for set screws
+upper_hub_closed_top,1,"printed, rotating","OD 248, 20 curved blind pockets open DOWN, closed top, drip lip",PAHT-CF final (PETG-HF trial),258.8,print,top face down on bed
+lower_hub_closed_bottom,1,"printed, rotating","OD 248, 20 curved blind pockets open UP, weeps, chimney, labyrinth cup",PAHT-CF final (PETG-HF trial),333.5,print,bottom down on bed
+blade,20,"sheet metal, rotating","44.50 x 139.7 blank, centred tabs 14 x 7, cupped R45 across the width",1.6 mm aluminium,,OWNED stock: 5 pieces 11.75 x 3.75 in (4 blanks each),cut 1 test blade first
+shaft (hollow tube),1,rotating,1/4 in OD x 0.035 in wall (ID ~4.5) x 198.8 mm,304 stainless tube,,"OWNED tube (209.55 long) if it slips into the bearings, else BUY",1 spot dimple for the lower set screw
+M4 threaded rod (tie rod),1,rotating,"M4 x 211 mm, A2 stainless",stainless,,BUY,runs inside the tube; holds the upper hub down
+"M4 hex nut (captive, upper hub)",1,rotating,"DIN 934, 7 AF x 3.2",stainless,,BUY,slides into the upper hub side slot
+M4 nyloc nut + M4 washer,1,rotating,DIN 985 + DIN 125,stainless,,BUY,"under the shaft, tightened from below"
 bearing R4-2RS,2,stationary outer / rotating inner,6.35 x 15.875 x 4.98,"steel, sealed",,OWNED,verify bore marking
 shaft collar 1/4 in bore,1,rotating,"OD ~12.7, width ~7.9, set screw",steel / stainless,,BUY,below lower bearing
-set screw M4 x 6 cup point,2,rotating,A2 stainless + medium threadlocker,stainless,,BUY,"one per hub, into shaft dimple"
-hex nut M4 DIN 934,2,rotating,7 AF x 3.2,stainless,,BUY,drops into hub nut slot
+set screw M4 x 6 cup point,1,rotating,A2 stainless + medium threadlocker,stainless,,BUY,"lower hub only, into shaft dimple"
+hex nut M4 DIN 934,1,rotating,7 AF x 3.2,stainless,,BUY,drops into lower hub nut slot
 thrust_washer_top / bottom,2,"printed, rotating","OD 8.6 ID 6.5, t 2.0 / 1.5",PETG-HF,0,print,contacts bearing INNER race only
 bearing_support_stationary,1,"printed, stationary","ring + 3 spokes + 2-bearing tower, 50 mm bearing spacing",PAHT-CF or ABS (painted),29.4,print,
 roof_flash_adapter (pick pitch file),1,"printed, stationary","flange OD 230, collar, gasket groove, 8 screw holes",ABS (painted) or PAHT-CF,89.7,print,choose STL matching roof pitch

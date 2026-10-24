@@ -14,15 +14,16 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 import flatpattern as FP
-from params import bow_offset, blade_frame
+from params import blade_frame
 
 PW, PH = landscape(letter)          # points
 GRAY = Color(0.45, 0.45, 0.45)
 BLUE = Color(0.1, 0.25, 0.7)
 RED = Color(0.75, 0.1, 0.1)
 ORANGE = Color(0.85, 0.42, 0.1)
-REV = "DW-V1.1"
+REV = "DW-V2.0"
 TODAY = datetime.date.today().isoformat()
+BLADES = 20   # set from the parameters in make_all()
 
 
 # ------------------------------------------------------------------ basics --
@@ -41,7 +42,7 @@ class Sheet:
         c.rect(x0, y0, tbw, tbh)
         c.line(x0, y0 + 12 * mm, x0 + tbw, y0 + 12 * mm)
         c.setFont("Helvetica-Bold", 9)
-        c.drawString(x0 + 2 * mm, y0 + 17 * mm, "DOGHOUSE WHIRLYBIRD - 8 BLADE ROTOR")
+        c.drawString(x0 + 2 * mm, y0 + 17 * mm, f"DOGHOUSE WHIRLYBIRD - {BLADES} CUPPED-BLADE ROTOR")
         c.setFont("Helvetica", 8)
         c.drawString(x0 + 2 * mm, y0 + 13.5 * mm, self.title[:70])
         c.setFont("Helvetica", 7)
@@ -222,12 +223,12 @@ def sheet_cover(S, P, D, report, renders):
     ], 8, bold_first=True)
     rows = [["Key result (from CAD)", "Value"],
             ["Installed height, roof to rotor top", f"{D['installed_height']:.1f} mm ({D['installed_height'] / 25.4:.2f} in)  limit 190.5"],
-            ["Rotor OD incl. bowed blades", f"{D['rotor_od_actual']:.1f} mm ({D['rotor_od_actual'] / 25.4:.2f} in)  target 266.7"],
-            ["Rotor OD at cap faces", f"{D['rotor_od_at_cap_faces']:.1f} mm"],
+            ["Rotor OD (blade tips)", f"{D['rotor_od_actual']:.1f} mm ({D['rotor_od_actual'] / 25.4:.2f} in)  target 266.7"],
+            ["Blades", f"{P['blade_count']} cupped vanes, R{P['blade']['cup_radius']:.0f} x {D['cup_depth']:.1f} mm deep"],
             ["Hub OD upper / lower", f"{P['upper_hub']['od']:.0f} / {P['lower_hub']['od']:.0f} mm"],
-            ["Cap separation (blade shoulders)", f"{D['cap_separation']:.2f} mm (bow {P['blade']['bow_sagitta']:.0f} mm)"],
+            ["Cap separation (blade shoulders)", f"{D['cap_separation']:.2f} mm (= blade body length)"],
             ["Blade chord angle from radial", f"{P['blade']['plan_chord_angle_from_radial']:.0f} deg, all same hand"],
-            ["Min blade-to-blade clearance", f"{D['neighbour_min_clearance_sampled'] - P['blade']['thickness']:.1f} mm"],
+            ["Plan coverage / air channel", f"{100 * D['plan_coverage_fraction']:.1f} % (closed ring) / {D['neighbour_min_clearance_sampled']:.1f} mm"],
             ["Rotor-to-stationary axial gap", f"{P['stationary']['rotor_to_stationary_axial_gap']:.1f} mm (labyrinth 2.0 radial)"],
             ["Bearing spacing / shaft length", f"{P['bearings']['center_separation']:.0f} mm / {D['shaft_length']:.1f} mm"],
             ["Throat (roof opening)", f"{P['stationary']['throat_id']:.0f} mm  (5 in hole saw)"],
@@ -290,10 +291,10 @@ def sheet_rotor_stator(S, P, D, items, renders):
     S.image(renders / "rotor_vs_stationary_section.png", 12, 92, 128, 100)
     S.image(renders / "rotor_lifted_off_stationary.png", 145, 92, 128, 100)
     rows = [["ROTATING part (orange)", "Attaches to", "By"],
-            ["Upper hub (closed top)", "shaft (blind bore)", "1x M4 set screw in nut slot -> shaft dimple"],
+            ["Upper hub (closed top)", "shaft + blades", "M4 tie rod in tube -> captive nut; pulled onto shoulders"],
             ["Lower hub (closed bottom)", "shaft", "1x M4 set screw in nut slot -> shaft dimple"],
-            ["8 blades", "both hubs", "tabs trapped in blind pockets (no fasteners)"],
-            ["Shaft 1/4 in", "bearing INNER races", "slip fit; lower hub bears on top inner race via washer"],
+            [f"{P['blade_count']} blades", "both hubs", "tabs trapped in blind pockets (no fasteners)"],
+            ["Shaft 1/4 in TUBE + tie rod", "bearing INNER races", "nyloc nut + washer under the tube end"],
             ["Top thrust washer", "upper bearing inner race", "loose on shaft, under lower-hub cup"],
             ["Shaft collar + bottom washer", "lower bearing inner race", "collar set screw (uplift stop, 0.2 endplay)"]]
     S.table(12, 88, rows, [40, 38, 66], size=6.2)
@@ -305,7 +306,7 @@ def sheet_rotor_stator(S, P, D, items, renders):
     S.table(158, 88, rows, [40, 32, 43], size=5.8)
     S.lines(12, 52, ["NO stationary part is fastened to either rotating hub. The only paths between rotor and stator are the two",
                      "ball bearings. Minimum running clearances (from CAD): 6.0 mm lower hub to collar/support ring, 2.0 mm radial",
-                     f"labyrinth (cup vs tower), {D['neighbour_min_clearance_sampled'] - P['blade']['thickness']:.0f} mm blade to blade, >13 mm blade to any stationary part.",
+                     f"labyrinth (cup vs tower), {D['neighbour_min_clearance_sampled']:.1f} mm air channel blade to blade, >13 mm blade to any stationary part.",
                      "Service: remove 3 M3 screws -> the whole rotor + bearing cartridge lifts out of the roof adapter."], 7.5)
 
 
@@ -323,11 +324,11 @@ def sheet_exploded(S, P, D, renders):
         "   Mark through the set-screw hole; spot-drill dimple (guide); M4 set",
         "   screw + nut, threadlocker. Set collar for 0.2 mm endplay.",
         "5  Drop each blade's lower tab straight DOWN into a lower-hub pocket",
-        "   (same orientation for all 8: bow outward, tab at inner edge).",
-        "6  Lower the upper hub straight DOWN over all 8 upper tabs (lead-in",
-        "   chamfers align them). Press lightly until every shoulder seats.",
-        "7  Mark, spot-drill the 2nd dimple, tighten upper set screw (thread-",
-        "   locker). Blades are now trapped: no per-blade hardware.",
+        f"   (all {P['blade_count']} the same way: concave side as in the plan view).",
+        "6  Captive M4 nut into the upper hub side slot. Lower the hub straight",
+        "   DOWN over all upper tabs (lead-ins align them).",
+        "7  M4 rod up through the tube into the nut; washer + nyloc from below;",
+        "   snug until every shoulder seats. Blades trapped, no blade hardware.",
         "8  Spin by hand: no rub, no rattle. Static-balance (tape on hub rim).",
         "9  Fasten roof adapter (sealant + 8 screws); drop the rotor cartridge",
         "   into the collar; 3x M3 radial screws. Optional tray underneath.",
@@ -354,24 +355,24 @@ def _hub_sheet(S, P, D, hub, name, renders, upper):
     # plan view from the pocket side
     if upper:
         vis, _ = hlr(hub, (0, 0, -3000), (0, 1, 0), (0, 0, 0))
-        V = View(S, 62, 120, 0.5, flipx=False)
+        V = View(S, 72, 118, 0.4, flipx=False)
     else:
         vis, _ = hlr(hub, (0, 0, 3000), (0, 1, 0), (0, 0, 0))
-        V = View(S, 62, 120, 0.5)
+        V = View(S, 72, 118, 0.4)
     V.edges(vis, 0.3)
     rho = P["pocket"]["tab_center_radius"]
     V.poly([(rho * math.cos(a), rho * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 120)], 0.25, RED, (6, 2, 1, 2))
     R = P["upper_hub"]["od"] / 2 if upper else P["lower_hub"]["od"] / 2
     V.dim((-R, 0), (R, 0), -R - 8, f"OD {2 * R:.0f}")
-    V.note((rho, 0), (-100, 113), f"8x BLIND POCKET {D['pocket_length']:.1f} x {P['pocket']['width']:.2f} x {P['pocket']['depth']:.1f} DEEP")
-    V.note((rho * math.cos(math.pi / 4), rho * math.sin(math.pi / 4)), (-100, 105), f"POCKET CENTRES ON R{rho:.1f}, 8x45 deg")
+    V.note((rho, 0), (-100, 113), f"{P['blade_count']}x CURVED BLIND POCKET {D['pocket_length']:.1f} x {P['pocket']['width']:.2f} x {P['pocket']['depth']:.1f} DEEP")
+    V.note((rho * math.cos(math.pi / 4), rho * math.sin(math.pi / 4)), (-100, 105), f"POCKET CENTRES ON R{rho:.1f}, {P['blade_count']}x{360 / P['blade_count']:.0f} deg")
     th = P["blade"]["plan_chord_angle_from_radial"]
     V.note((rho * math.cos(math.pi), rho * math.sin(math.pi)), (-100, -118), f"POCKET LONG AXIS {th:.0f} deg FROM RADIAL (all same hand)")
-    S.text(14, 186, "PLAN FROM " + ("BELOW (pocket face)" if upper else "ABOVE (pocket face)") + "  1:2", 7.5, True)
+    S.text(14, 186, "PLAN FROM " + ("BELOW (pocket face)" if upper else "ABOVE (pocket face)") + "  1:2.5", 7.5, True)
     # half section
     cut = half([hub])
     vis2, _ = hlr(cut, (0, -3000, zf), (0, 0, 1), (0, 0, zf))
-    V2 = View(S, 165, 160, 0.5)
+    V2 = View(S, 190, 165, 0.4)
     V2.edges(vis2, 0.3)
     T_ = P["upper_hub"]["thickness"] if upper else P["lower_hub"]["thickness"]
     if upper:
@@ -380,7 +381,7 @@ def _hub_sheet(S, P, D, hub, name, renders, upper):
     else:
         V2.dim((R, -T_), (R, 0), 6, f"{T_:.0f}", True)
         V2.dim((70, 0), (70, P["lower_hub"]["chimney_height_above_face"]), 8, f"{P['lower_hub']['chimney_height_above_face']:.0f}", True)
-    S.text(140, 186, "HALF SECTION XZ  1:2", 7.5, True)
+    S.text(140, 186, "HALF SECTION XZ  1:2.5", 7.5, True)
     S.image(renders / (("upper_hub_underside_blind_pockets.png") if upper else ("lower_hub_top_blind_pockets.png")), 140, 96, 64, 50)
     S.image(renders / (("upper_hub_top_closed.png") if upper else ("lower_hub_bottom_closed.png")), 206, 96, 64, 50)
     S.text(141, 92, "pockets visibly BLIND" if upper else "pockets open UP only", 6.5)
@@ -393,8 +394,9 @@ def _hub_sheet(S, P, D, hub, name, renders, upper):
             ["Intact wall over/under pocket", f"{D['upper_hub_roof_over_pocket']:.1f} mm"],
             ["Wall pocket->OD (mouth / deep)", f"{D['upper_hub_shell_outside_pocket']:.2f} / {D['upper_hub_shell_outside_pocket_below_mouth']:.2f}"],
             ["Shaft bore", f"{P['shaft']['hub_bore_diameter']:.2f} {'BLIND' if upper else 'through boss'}"],
-            ["Set screw", f"M4 x6 cup, nut slot {F['nut_slot_width']}x{F['nut_slot_thickness']}, at {26.0:.0f} deg az"],
-            ["Set screw height", f"Z {D['z_upper_set_screw'] if upper else D['z_lower_set_screw']:.2f}"]]
+            (["Tie-rod nut", f"captive M4, side slot {F['nut_slot_width']}x{F['nut_slot_thickness']}, Z {D['z_upper_nut_bottom']:.2f}"] if upper else
+             ["Set screw", f"M4 x6 cup, nut slot {F['nut_slot_width']}x{F['nut_slot_thickness']}, Z {D['z_lower_set_screw']:.2f}"]),
+            ["Pocket shape", f"curved R{P['blade']['cup_radius']:.0f} (follows the cupped tab)"]]
     if upper:
         rows += [["Drip lip", f"{P['upper_hub']['drip_lip_width']} x {P['upper_hub']['drip_lip_height']} notched at blades"],
                  ["Centre web / ribs", f"{P['upper_hub']['center_web_thickness']} mm web, {P['upper_hub']['rib_count']} ribs"]]
@@ -450,14 +452,14 @@ def sheet_adapter(S, P, D, items, report, renders):
                      f"SEAL: continuous bead of butyl / polyurethane in the {S_['gasket_groove_width']:.0f} x {S_['gasket_groove_depth']} mm groove (R{S_['gasket_groove_radius']:.0f}),",
                      "       plus a fillet bead round the flange edge on the UPHILL half. On shingles, slip the uphill half under",
                      "       the course above (no sealant needed there) - classic step-flash logic.",
-                     "PITCH: real pitch unknown. Pitched files tilt the flange; the collar stays vertical. Above ~5/12",
-                     "       the 190.5 mm limit is exceeded because the rotor must lift to clear the uphill roof.",
+                     "PITCH: real pitch unknown. Pitched files tilt the flange; the collar stays vertical. Steeper roofs lift",
+                     "       the rotor to clear the uphill side; see the table for which pitches stay within 190.5 mm.",
                      "SUPPORT: bearing-support ring drops into the counterbore and rests on the step; 3x M3 screws radial."], 7.4)
 
 
 def sheet_blade(S, P, D, report, renders):
     S.scale = "1:1 (blade)"
-    S.text(14, 200, "SHEET 10 - BLADE: FLAT PATTERN 1:1, FORMED PROFILE 1:1, FORMING", 10, True)
+    S.text(14, 200, "SHEET 10 - BLADE: FLAT PATTERN 1:1, CUP GAUGE 1:1, FORMING", 10, True)
     segs = FP.outline(P, D)
     an = FP.annotations(P, D)
     V = View(S, 30, 30, 1.0)
@@ -465,7 +467,7 @@ def sheet_blade(S, P, D, report, renders):
     V.poly([(an["tab_centerline_x"], -4), (an["tab_centerline_x"], an["L"] + 4)], 0.25, RED, (6, 2, 1, 2))
     for ys in an["shoulder_y"]:
         V.poly([(-3, ys), (an["W"] + 3, ys)], 0.25, Color(0.1, 0.5, 0.1), (2, 1))
-    V.poly([(-3, an["bow_peak_y"]), (an["W"] + 3, an["bow_peak_y"])], 0.25, RED, (6, 2, 1, 2))
+    V.poly([(-3, an["mid_y"]), (an["W"] + 3, an["mid_y"])], 0.25, RED, (6, 2, 1, 2))
     B = P["blade"]
     V.dim((0, an["L"] - B["tab_length"]), (an["W"], an["L"] - B["tab_length"]), 14, f"{B['body_chord']:.2f}")
     V.dim((0, 0), (0, an["L"]), -10, f"{B['blank_length']:.1f} BLANK", True)
@@ -476,39 +478,42 @@ def sheet_blade(S, P, D, report, renders):
     V.note((B["tab_inner_margin"] + B["tab_width"] + 1.2, B["tab_length"] + 0.8), (40, 20), "R2 ROOT x4")
     V.note((B["tab_inner_margin"] + 0.5, 0.5), (-14, 10), "1x45 TIP")
     V.note((an["W"] - 0.6, an["L"] - B["tab_length"] - 0.6), (66, 120), "R2 CORNERS (deburr)")
-    S.text(30 + an["W"] + 22, 27, "INNER EDGE = toward shaft (x=0)", 6.5)
-    # formed profile 1:1
-    H, s = D["cap_separation"], B["bow_sagitta"]
-    V2 = View(S, 125, 30 + B["tab_length"], 1.0)
-    z = np.linspace(0, H, 121)
-    w = bow_offset(z, s, H)
-    V2.poly([(0, -B["tab_length"])] + list(zip(w, z)) + [(0, H + B["tab_length"])], 0.6, BLUE)
-    V2.poly([(0, -B["tab_length"]), (0, H + B["tab_length"])], 0.25, GRAY, (3, 2))
-    V2.dim((0, 0), (0, H), -8, f"{H:.2f} CAP SEPARATION", True)
-    V2.dim((0, H / 2), (s, H / 2), 3, f"{s:.0f}")
-    V2.note((s * 0.5, H * 0.18), (30, 30), "d(z) = s sin^2(pi z / H)")
-    V2.note((0, 0), (6, -12), "SHOULDER")
-    S.text(118, 172, "FORMED SIDE PROFILE 1:1 (lay blade on it)", 7, True)
+    S.text(30, 24, "Tabs CENTRED on the width; the blank is symmetric (no left/right version).", 6.5)
+    # cup gauge 1:1 (end view of the formed blade, concave side up)
+    H = D["cap_separation"]
+    outer, inner, mid = FP.cup_gauge_points(P)
+    V2 = View(S, 132, 92, 1.0)
+    V2.poly(outer, 0.6, BLUE)
+    V2.poly(inner, 0.6, BLUE)
+    V2.poly([outer[0], inner[0]], 0.6, BLUE)
+    V2.poly([outer[-1], inner[-1]], 0.6, BLUE)
+    cd = D["cup_depth"]
+    V2.poly([mid[0], mid[-1]], 0.25, GRAY, (3, 2))
+    V2.dim(mid[0], mid[-1], 6, f"CHORD {D['cup_chord']:.1f}")
+    V2.dim((0, 0), (0, cd), -30, f"{cd:.1f} DEEP", True)
+    V2.note((mid[15][0], mid[15][1]), (-20, -14), f"R{B['cup_radius']:.0f} (mid-surface)")
+    S.text(100, 118, "CUP GAUGE 1:1", 7.5, True)
+    S.text(100, 114, "stand the formed blade on its end here", 6.5)
     fd = report["forming_die"]
     S.lines(175, 186, ["CUT (gate C: ONE blade first)",
-                       "- Rip stock 3.75 in -> 57.15 mm; crosscut 139.7 mm;",
-                       "  file to the line; kerf on the WASTE side.",
+                       f"- 4 blanks per 11.75 x 3.75 in piece: rip 2 strips {B['body_chord']:.1f} wide,",
+                       f"  crosscut each at {B['blank_length']:.1f}; kerf on the WASTE side.",
                        "- Notch tabs: saw/snips to 2 mm short of the shoulder,",
                        "  file R2 roots (no sharp inside corners).",
                        "- Break all edges; R2 outer corners; 1x45 tab tips.",
                        "- No holes in the blade.",
                        "",
-                       "FORM (printed press die, bench vise)",
-                       f"- Die sagitta {fd['die_sagitta']:.1f} mm = {s:.0f} x springback {fd['springback_factor']:.2f}.",
-                       "- Lower die keys only accept the blank tab-side correct.",
-                       "- Squeeze slowly until faces meet; release; measure.",
-                       f"- Target bow {s:.0f} +/-1.5 mm; shoulders {H:.1f} +/-0.5 apart.",
+                       "FORM ACROSS THE WIDTH (printed cylinder die, vise)",
+                       f"- Die radius {fd['die_bend_radius']:.1f} = cup R{B['cup_radius']:.0f} / springback {fd['springback_factor']:.2f}.",
+                       "- Tabs sit between the 4 posts; shoulders butt them.",
+                       "- Squeeze slowly until the die faces meet; release.",
+                       f"- Check on the cup gauge: {cd:.1f} +/-0.7 mm deep.",
                        "- Too flat -> raise springback factor, reprint die.",
-                       "- Tabs must stay flat, in line, and parallel.",
+                       "- Blade must stay straight along its length.",
                        "",
                        "ORIENTATION IN ROTOR",
-                       "- Tab toward the shaft-side edge; bow bulges OUTWARD.",
-                       "- All 8 identical; all same hand."], 7.2, bold_first=True)
+                       "- All blades identical; concave side faces the",
+                       "  same way round the ring (see top-view render)."], 7.2, bold_first=True)
     S.image(renders / "forming_die_open.png", 175, 36, 95, 54)
 
 
@@ -593,7 +598,7 @@ def templates_pdf(P, D, path):
     c.setDash(6, 2)
     c.setStrokeColor(RED)
     c.line(*T((an["tab_centerline_x"], -5)), *T((an["tab_centerline_x"], an["L"] + 5)))
-    c.line(*T((-5, an["bow_peak_y"])), *T((an["W"] + 5, an["bow_peak_y"])))
+    c.line(*T((-5, an["mid_y"])), *T((an["W"] + 5, an["mid_y"])))
     c.setStrokeColor(Color(0.1, 0.5, 0.1))
     for ys in an["shoulder_y"]:
         c.line(*T((-5, ys)), *T((an["W"] + 5, ys)))
@@ -601,68 +606,70 @@ def templates_pdf(P, D, path):
     c.setStrokeColor(black)
     c.setFont("Helvetica", 6.5)
     c.drawString(*T((an["W"] + 6, an["shoulder_y"][0] - 1)), "SHOULDER (green) - seats on hub face")
-    c.drawString(*T((an["W"] + 6, an["bow_peak_y"] - 1)), "BOW PEAK (red) - mid-length")
+    c.drawString(*T((an["W"] + 6, an["mid_y"] - 1)), "MID-LENGTH (red)")
     c.drawString(*T((an["W"] + 6, an["shoulder_y"][1] - 1)), "SHOULDER")
-    c.drawString(*T((-2, -8)), "INNER EDGE (toward shaft)")
+    c.drawString(*T((-2, -8)), "Tabs centred: blank is symmetric")
     c.drawString(*T((an["tab_centerline_x"] - 6, -12)), "TAB CENTRELINE")
     c.drawString(*T((4, an["L"] / 2 + 30)), f"W {B['body_chord']:.2f}")
     c.drawString(*T((4, an["L"] / 2 + 25)), f"L {B['blank_length']:.1f}")
     c.drawString(*T((4, an["L"] / 2 + 20)), f"tabs {B['tab_width']:.0f} x {B['tab_length']:.0f}, R2 roots")
-    # formed profile
-    Hc, s = D["cap_separation"], B["bow_sagitta"]
-    px, py = ox + an["W"] + 75, oy + B["tab_length"]
-    z = np.linspace(0, Hc, 121)
-    w = bow_offset(z, s, Hc)
+    # cup gauge 1:1: end view of the formed blade, concave side up
+    outer, inner, mid = FP.cup_gauge_points(P)
+    gx, gy = ox + an["W"] + 70, oy + an["L"] / 2
     c.setStrokeColor(BLUE)
     c.setLineWidth(0.6)
-    p = c.beginPath()
-    p.moveTo(px * mm, (py - B["tab_length"]) * mm)
-    for wv, zv in zip(w, z):
-        p.lineTo((px + wv) * mm, (py + zv) * mm)
-    p.lineTo(px * mm, (py + Hc + B["tab_length"]) * mm)
-    c.drawPath(p)
+    for face in (outer, inner):
+        p = c.beginPath()
+        p.moveTo((gx + face[0][0]) * mm, (gy + face[0][1]) * mm)
+        for x, y in face[1:]:
+            p.lineTo((gx + x) * mm, (gy + y) * mm)
+        c.drawPath(p)
     c.setStrokeColor(GRAY)
     c.setDash(3, 2)
-    c.line(px * mm, (py - B["tab_length"]) * mm, px * mm, (py + Hc + B["tab_length"]) * mm)
+    c.line((gx + mid[0][0]) * mm, (gy + mid[0][1]) * mm, (gx + mid[-1][0]) * mm, (gy + mid[-1][1]) * mm)
     c.setDash()
     c.setStrokeColor(black)
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString((gx - 24) * mm, (gy + mid[0][1] + 6) * mm, "CUP GAUGE 1:1 (end view of formed blade)")
     c.setFont("Helvetica", 6.5)
-    c.drawString((px - 12) * mm, (py + Hc + B["tab_length"] + 3) * mm, "FORMED PROFILE GAUGE 1:1")
-    c.drawString((px + s + 2) * mm, (py + Hc / 2) * mm, f"{s:.0f} mm")
-    c.drawString((px + 2) * mm, (py - 3) * mm, f"shoulders {Hc:.1f} apart")
+    c.drawString((gx - 24) * mm, (gy - 6) * mm, f"R{B['cup_radius']:.0f} mid-surface, {D['cup_depth']:.1f} mm deep over {D['cup_chord']:.1f} chord")
+    c.drawString((gx - 24) * mm, (gy - 10) * mm, "Stand the blade on its end on this curve: gaps < 0.7 mm.")
     scalebars(22)
     c.showPage()
 
-    # page 2: nested stock layout (1:2)
+    # page 2: nested stock layout (1:3)
+    nests = FP.nest(P)
+    n_stock = max(k for k, _, _ in nests) + 1
     c.setFont("Helvetica-Bold", 11)
-    c.drawString(15 * mm, H - 14 * mm, "NESTED STOCK LAYOUT - 8 BLADES FROM 4 PIECES OF 11.75 x 3.75 in STOCK (SCALE 1:2)")
-    k = 0.5
-    sl, sw, kerf = 298.45, 95.25, 3.0
-    for i in range(4):
-        y0 = H / mm - 40 - i * (sw * k + 18)
-        c.setLineWidth(0.4)
-        c.setDash(5, 2)
-        c.rect(20 * mm, (y0 - sw * k) * mm, sl * k * mm, sw * k * mm)
-        c.setDash()
-        c.setFont("Helvetica", 7)
-        c.drawString(20 * mm, (y0 + 2) * mm, f"STOCK {i + 1}  298.45 x 95.25  ->  BLADE {2 * i + 1} + BLADE {2 * i + 2}   (offcut {sw - B['body_chord'] - 4:.1f} mm strip)")
-        for j in range(2):
-            ox_ = 4 + j * (B["blank_length"] + kerf)
-            pts = FP.polyline_points(segs, 6)
-            p = c.beginPath()
-            q0 = pts[0]
-            p.moveTo((20 + (ox_ + q0[1]) * k) * mm, (y0 - sw * k + (4 + q0[0]) * k) * mm)
-            for q in pts[1:]:
-                p.lineTo((20 + (ox_ + q[1]) * k) * mm, (y0 - sw * k + (4 + q[0]) * k) * mm)
-            p.close()
-            c.setLineWidth(0.3)
-            c.drawPath(p)
+    c.drawString(15 * mm, H - 14 * mm, f"NESTED STOCK LAYOUT - {P['blade_count']} BLADES FROM {n_stock} PIECES OF 11.75 x 3.75 in STOCK (SCALE 1:3)")
+    k = 1 / 3
+    sl, sw = FP.STOCK
+    pts = FP.polyline_points(segs, 6)
+    for n, (i, ox_, oy_) in enumerate(nests, 1):
+        y0 = H / mm - 30 - i * (sw * k + 11)
+        if ox_ == FP.NEST_EDGE_X and oy_ == FP.NEST_EDGE_Y:
+            c.setLineWidth(0.4)
+            c.setDash(5, 2)
+            c.rect(20 * mm, (y0 - sw * k) * mm, sl * k * mm, sw * k * mm)
+            c.setDash()
+            c.setFont("Helvetica", 7)
+            c.drawString(20 * mm, (y0 + 2) * mm, f"STOCK {i + 1}  298.45 x 95.25")
+        p = c.beginPath()
+        p.moveTo((20 + (ox_ + pts[0][1]) * k) * mm, (y0 - sw * k + (oy_ + pts[0][0]) * k) * mm)
+        for q in pts[1:]:
+            p.lineTo((20 + (ox_ + q[1]) * k) * mm, (y0 - sw * k + (oy_ + q[0]) * k) * mm)
+        p.close()
+        c.setLineWidth(0.3)
+        c.drawPath(p)
+        c.setFont("Helvetica", 5.5)
+        c.drawString((20 + (ox_ + 60) * k) * mm, (y0 - sw * k + (oy_ + B["body_chord"] / 2) * k) * mm, f"{n}")
     c.setFont("Helvetica", 7.5)
-    yt = H / mm - 40 - 4 * (sw * k + 18) + 4
-    for t, line in enumerate(["Order of cuts per stock piece: (1) rip the 57.15 mm strip along the full 298.45 length, keeping the",
-                              "4 mm edge margin; (2) crosscut at 4 + 139.7 = 143.7 mm, allow 3 mm kerf; (3) crosscut the 2nd blank at",
-                              "146.7 + 139.7 = 286.4 mm; (4) notch tabs. The 33 mm offcut strip is ideal for tab-fit test pieces (14 mm wide).",
-                              "The CUT DXF (blade_flat_pattern_8x.dxf) carries the same nest at 1:1 for a CNC router or printed paper."]):
+    yt = H / mm - 30 - n_stock * (sw * k + 11) - 2
+    W = B["body_chord"]
+    for t, line in enumerate([f"Per stock piece: (1) rip 2 strips {W:.1f} wide (1.5 mm edge, 2 mm kerf between: {1.5 + 2 * W + 2:.1f} of 95.25 used);",
+                              f"(2) crosscut each strip at 4 + {B['blank_length']:.1f} = {4 + B['blank_length']:.1f} mm and again at {4 + 2 * B['blank_length'] + 3:.1f} mm (3 mm kerf);",
+                              "(3) notch tabs, file R2 roots. Cut ONE blank first and check it against page 1 before cutting the rest.",
+                              "The DXF blade_flat_pattern_all_blades.dxf carries the same nest at 1:1 for a CNC router, laser or paper template."]):
         c.drawString(20 * mm, (yt - t * 4) * mm, line)
     c.showPage()
 
@@ -713,41 +720,43 @@ def simple_pdf(path, title, images, lines):
 
 def comparison_pdf(path, P, D, renders, study_rows):
     c = canvas.Canvas(str(path), pagesize=landscape(letter))
-    S = Sheet(c, "8 / 10 / 12 blade comparison (real CAD)")
-    S.text(14, 200, "8 / 10 / 12 BLADE COMPARISON - SAME BLADE, SAME HUBS (real CAD renders)", 11, True)
-    for k, n in enumerate((8, 10, 12)):
+    S = Sheet(c, "16 / 20 / 24 blade comparison (real CAD)")
+    S.text(14, 200, "16 / 20 / 24 BLADE COMPARISON - SAME CUPPED BLADE, SAME OD (real CAD renders)", 11, True)
+    for k, n in enumerate((16, 20, 24)):
         S.image(renders / f"compare_{n}_blades_iso.png", 12 + k * 86, 128, 82, 66)
         S.image(renders / f"compare_{n}_blades_top_no_cap.png", 12 + k * 86, 64, 82, 62)
-    rows = [["Blades", "Chord deg", "Bow", "Rotor OD", "Blade gap", "Plan coverage %", "Blade set g", "Height"]]
+    th0, rc0 = P["blade"]["plan_chord_angle_from_radial"], P["blade"]["cup_radius"]
+    rows = [["Blades", "Chord deg", "Cup R", "Rotor OD", "Air channel", "Coverage %", "Blade set g", "Stock pcs", "Targets"]]
     for r in study_rows:
-        if r["chord_angle_deg"] == P["blade"]["plan_chord_angle_from_radial"] and r["bow_sagitta_mm"] == P["blade"]["bow_sagitta"]:
-            rows.append([r["blades"], r["chord_angle_deg"], r["bow_sagitta_mm"], r["rotor_od_mm"], r["neighbour_clearance_mm"],
-                         r["plan_coverage_pct"], r["blade_set_mass_g"], r["installed_height_mm"]])
-    S.table(12, 60, rows, [16, 18, 12, 20, 20, 26, 22, 18], size=7)
-    S.lines(172, 60, ["Reading the table:", "- No collisions for 8, 10 or 12 with this blade envelope.",
-                      "- More blades raise plan coverage (rain shading) and mass,", "  and reduce the open exhaust area between blades.",
-                      "- They do NOT guarantee more ventilation or rain-tightness.", "- 8 blades remains the primary design; 10/12 are",
-                      "  parametric (set blade_count) pending airflow tests.", "- Full 27-variant table: whirlybird/reports/variant_study.csv"], 7.2)
+        if r["chord_angle_deg"] == th0 and r["cup_radius_mm"] == rc0:
+            rows.append([r["blades"], r["chord_angle_deg"], r["cup_radius_mm"], r["rotor_od_mm"], r["air_channel_mm"],
+                         r["plan_coverage_pct"], r["blade_set_mass_g"], r["stock_pieces"], r["meets_targets"]])
+    S.table(12, 60, rows, [14, 16, 12, 18, 20, 20, 20, 16, 16], size=7)
+    S.lines(172, 60, ["Targets: coverage >= 100 % (closed ring, no", "straight line of sight) AND air channel >= 10 mm.",
+                      "- 16 blades leave the ring open (~80 %).", "- 24 blades choke the air channels (~7.6 mm).",
+                      "- 20 blades meet both: selected.", "- Not a claim of optimal airflow: test (gate F).",
+                      "- 27-variant table: whirlybird/reports/variant_study.csv"], 7.2)
     S.frame(1, 2)
     c.showPage()
     S2 = Sheet(c, "Chord angle variants")
-    S2.text(14, 200, "PLAN CHORD ANGLE VARIANTS 25 / 35 / 45 deg (8 blades, upper hub hidden)", 11, True)
-    for k, th in enumerate((25, 35, 45)):
+    S2.text(14, 200, "PLAN CHORD ANGLE VARIANTS 45 / 55 / 65 deg (20 cupped blades, upper hub hidden)", 11, True)
+    for k, th in enumerate((45, 55, 65)):
         S2.image(renders / f"compare_chord_{th}deg_top.png", 12 + k * 86, 90, 82, 100)
-    rows = [["Chord deg", "Bow 10: OD / cov%", "Bow 15: OD / cov%", "Bow 20: OD / cov%", "Gap mm"]]
-    for th in (25, 35, 45):
-        rr = [r for r in study_rows if r["blades"] == 8 and r["chord_angle_deg"] == th]
-        rows.append([th] + [f"{r['rotor_od_mm']} / {r['plan_coverage_pct']}" for r in rr] + [rr[0]["neighbour_clearance_mm"]])
-    S2.table(12, 84, rows, [22, 40, 40, 40, 18], size=7.5)
-    S2.lines(12, 60, ["Selected: 35 deg, 15 mm bow - OD within the 254-279 mm window, 50 mm blade gaps, 49.6 mm minimum bend radius",
-                      "(easy to press-form 1.6 mm aluminium). 20 mm bow gives ~5 mm more OD but a 35 mm bend radius and more springback.",
-                      "45 deg gives the most plan coverage but the smallest OD. No variant is claimed aerodynamically optimal."], 7.5)
+    rows = [["Chord deg", "Cup R40: chan / cov%", "Cup R45: chan / cov%", "Cup R60: chan / cov%"]]
+    for th in (45, 55, 65):
+        rr = [r for r in study_rows if r["blades"] == P["blade_count"] and r["chord_angle_deg"] == th]
+        rows.append([th] + [f"{r['air_channel_mm']} / {r['plan_coverage_pct']}" for r in rr])
+    S2.table(12, 84, rows, [22, 44, 44, 44], size=7.5)
+    S2.lines(12, 60, [f"Selected: {th0:.0f} deg, cup R{rc0:.0f}: 100 % coverage with an 11.5 mm air channel, 5.4 mm deep scoop.",
+                      "45 deg leaves line-of-sight gaps; 65 deg narrows the channels below 10 mm. No variant is claimed aerodynamically optimal."], 7.5)
     S2.frame(2, 2)
     c.showPage()
     c.save()
 
 
 def make_all(P, D, items, report, DIRS):
+    global BLADES
+    BLADES = P["blade_count"]
     renders, pdf = DIRS["renders"], DIRS["pdf"]
     path = pdf / "fabrication_drawings.pdf"
     c = canvas.Canvas(str(path), pagesize=landscape(letter))
@@ -758,8 +767,8 @@ def make_all(P, D, items, report, DIRS):
         ("Rotor vs stationary", lambda S: sheet_rotor_stator(S, P, D, items, renders), "NTS"),
         ("Exploded assembly", lambda S: sheet_exploded(S, P, D, renders), "NTS"),
         ("True CAD views", lambda S: sheet_views(S, renders), "NTS"),
-        ("Upper hub", lambda S: _hub_sheet(S, P, D, next(i.shape for i in items if i.name == "upper_hub_closed_top"), "upper_hub_closed_top", renders, True), "1:2"),
-        ("Lower hub", lambda S: _hub_sheet(S, P, D, next(i.shape for i in items if i.name == "lower_hub_closed_bottom"), "lower_hub_closed_bottom", renders, False), "1:2"),
+        ("Upper hub", lambda S: _hub_sheet(S, P, D, next(i.shape for i in items if i.name == "upper_hub_closed_top"), "upper_hub_closed_top", renders, True), "1:2.5"),
+        ("Lower hub", lambda S: _hub_sheet(S, P, D, next(i.shape for i in items if i.name == "lower_hub_closed_bottom"), "lower_hub_closed_bottom", renders, False), "1:2.5"),
         ("Bearing support", lambda S: sheet_support(S, P, D, items, renders), "1:1"),
         ("Roof flash adapter", lambda S: sheet_adapter(S, P, D, items, report, renders), "1:1.67"),
         ("Blade", lambda S: sheet_blade(S, P, D, report, renders), "1:1"),
@@ -814,6 +823,7 @@ def make_all(P, D, items, report, DIRS):
     with open(DIRS["reports"] / "variant_study.csv") as f:
         rows = [{k: (float(v) if v.replace('.', '', 1).replace('-', '', 1).isdigit() else v) for k, v in r.items()} for r in csv.DictReader(f)]
     for r in rows:
-        for k in ("blades", "chord_angle_deg", "bow_sagitta_mm"):
+        for k in ("blades", "chord_angle_deg", "stock_pieces"):
             r[k] = int(r[k])
-    comparison_pdf(pdf / "comparison_8_10_12_blades.pdf", P, D, renders, rows)
+        r["cup_radius_mm"] = float(r["cup_radius_mm"])
+    comparison_pdf(pdf / "comparison_16_20_24_blades.pdf", P, D, renders, rows)

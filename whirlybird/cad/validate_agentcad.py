@@ -33,7 +33,6 @@ def main():
     specs = {
         "upper_hub_closed_top": {"expect_solids": 1, "features": [
             {"name": "shaft_bore_blind", "type": "cylinder", "diameter_mm": bore, "diameter_tolerance_mm": tol, "count": 1},
-            {"name": "set_screw_hole", "type": "cylinder", "diameter_mm": P["hub_fixing"]["screw_hole_diameter"], "diameter_tolerance_mm": tol, "count": 1},
             {"name": "outer_diameter", "type": "cylinder", "diameter_mm": P["upper_hub"]["od"], "diameter_tolerance_mm": tol, "count": 1}]},
         "lower_hub_closed_bottom": {"expect_solids": 1, "features": [
             {"name": "shaft_bore", "type": "cylinder", "diameter_mm": bore, "diameter_tolerance_mm": tol, "count": 1},

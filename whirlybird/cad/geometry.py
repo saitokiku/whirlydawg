@@ -12,11 +12,11 @@ import numpy as np
 from build123d import (
     Align, Axis, Box, BuildLine, BuildSketch, Compound, Cylinder, GeomType, Line,
     Location, Mode, Part, Plane, Polyline, Pos, Rectangle, RegularPolygon, Rot,
-    Sketch, Spline, Text, Vector, extrude, fillet, loft, make_face, mirror, revolve,
+    Sketch, Spline, Text, ThreePointArc, Vector, extrude, fillet, loft, make_face, mirror, revolve,
     chamfer,
 )
 
-from params import blade_frame, bow_offset, bow_slope, solve_cap_separation
+from params import blade_frame
 
 RAD = math.pi / 180.0
 
@@ -57,36 +57,25 @@ def engrave(part: Part, text: str, plane: Plane, size=4.0, depth=0.6) -> Part:
 
 
 # -------------------------------------------------------------------- blade --
-def _bow_side_points(s, H, t, side, n=41):
-    z = np.linspace(0.0, H, n)
-    d = bow_offset(z, s, H)
-    dp = bow_slope(z, s, H)
-    k = 1.0 / np.sqrt(1.0 + dp ** 2)
-    w = d + side * (t / 2) * k
-    zz = z - side * (t / 2) * dp * k
-    return list(zip(w, zz))
+def _cup_xy(Rc, k, R, phi):
+    """Blade-local XY (X = chord c, Y = -n) of the point at angle phi on radius R about the cup centre."""
+    return (R * math.sin(phi), -k * Rc + k * R * math.cos(phi))
 
 
-def blade_profile_face(s, H, t, tab_len) -> Sketch:
-    """Closed 2-D strip (w = normal offset, z) of the bowed blade incl. straight tabs."""
-    a = _bow_side_points(s, H, t, -1)   # inner face
-    b = _bow_side_points(s, H, t, +1)   # outer face
+def cup_sector(P, off_in, off_out, s0, s1) -> Sketch:
+    """Plan sketch of an annular sector following the blade cup: radii Rc+off_in..Rc+off_out,
+    arc-length span s0..s1 (measured on Rc from the tab centre)."""
+    B = P["blade"]
+    Rc, k = B["cup_radius"], B["cup_direction"]
+    f0, f1 = s0 / Rc, s1 / Rc
+    fm = 0.5 * (f0 + f1)
+    ri, ro = Rc + off_in, Rc + off_out
     with BuildSketch(Plane.XY) as sk:
         with BuildLine():
-            Line((-t / 2, -tab_len), (t / 2, -tab_len))
-            Line((t / 2, -tab_len), b[0])
-            if s > 0:
-                Spline(*b, tangents=[(0, 1), (0, 1)])
-            else:
-                Line(b[0], b[-1])
-            Line(b[-1], (t / 2, H + tab_len))
-            Line((t / 2, H + tab_len), (-t / 2, H + tab_len))
-            Line((-t / 2, H + tab_len), a[-1])
-            if s > 0:
-                Spline(*reversed(a), tangents=[(0, -1), (0, -1)])
-            else:
-                Line(a[-1], a[0])
-            Line(a[0], (-t / 2, -tab_len))
+            ThreePointArc(_cup_xy(Rc, k, ro, f0), _cup_xy(Rc, k, ro, fm), _cup_xy(Rc, k, ro, f1))
+            Line(_cup_xy(Rc, k, ro, f1), _cup_xy(Rc, k, ri, f1))
+            ThreePointArc(_cup_xy(Rc, k, ri, f1), _cup_xy(Rc, k, ri, fm), _cup_xy(Rc, k, ri, f0))
+            Line(_cup_xy(Rc, k, ri, f0), _cup_xy(Rc, k, ro, f0))
         make_face()
     return sk.sketch
 
@@ -101,34 +90,29 @@ def _rounded_corner_rect(x0, x1, z0, z1, corner, r) -> Sketch:
 
 
 def blade_local(P, D) -> Part:
-    """One formed blade in its local frame: X = chord u, Y = -normal, Z = height above lower cap face."""
+    """One formed blade in its local frame: X = chord c, Y = -n, Z = height above the lower cap face.
+    Straight vertically, cupped across the width on cup_radius; tabs follow the same cup."""
     B = P["blade"]
     t, tab, tw = B["thickness"], B["tab_length"], B["tab_width"]
-    s, H = B["bow_sagitta"], D["cap_separation"]
+    H = D["cap_separation"]
     u0, u1 = D["blade_u_inner"], D["blade_u_outer"]
-    prof = blade_profile_face(s, H, t, tab)
-    # profile lives in local (w, z); put it on the plane whose x = -Y(local) ... w maps to -Y
-    # sketch x (= normal offset w) -> local -Y, sketch y (= z) -> +Z, extrude from u1 back to u0
-    pl = Plane(origin=(u1, 0, 0), x_dir=(0, -1, 0), z_dir=(-1, 0, 0))
-    body = extrude(pl * prof, amount=u1 - u0)
+    body = Pos(0, 0, -tab) * extrude(cup_sector(P, -t / 2, t / 2, u0, u1), amount=H + 2 * tab)
 
     # notches either side of each tab, with root radius, plus tab tip chamfers
     r = B["tab_root_radius"]
     cut = None
     for z_sh, z_far, sgn in ((0.0, -tab - 1.0, -1), (H, H + tab + 1.0, +1)):
         lo, hi = (z_far, z_sh) if sgn < 0 else (z_sh, z_far)
-        left = _rounded_corner_rect(u0 - 1.0, -tw / 2, lo, hi, (-tw / 2, z_sh), r)
-        right = _rounded_corner_rect(tw / 2, u1 + 1.0, lo, hi, (tw / 2, z_sh), r)
+        left = _rounded_corner_rect(u0 - 2.0, -tw / 2, lo, hi, (-tw / 2, z_sh), r)
+        right = _rounded_corner_rect(tw / 2, u1 + 2.0, lo, hi, (tw / 2, z_sh), r)
         for sk in (left, right):
-            tool = extrude(Plane.XZ * sk, amount=10, both=True)
+            tool = extrude(Plane.XZ * sk, amount=12, both=True)
             cut = tool if cut is None else cut + tool
-        # tip chamfers
         zt = -tab if sgn < 0 else H + tab
         ch = B["tab_tip_chamfer"]
         for sx in (-1, 1):
             tri = Polyline_face([(sx * tw / 2, zt), (sx * (tw / 2 - ch), zt), (sx * tw / 2, zt - sgn * ch)])
-            tri = extrude(Plane.XZ * tri, amount=10, both=True)
-            cut = cut + tri
+            cut = cut + extrude(Plane.XZ * tri, amount=12, both=True)
     return body - cut
 
 
@@ -146,33 +130,34 @@ def blade(i, P, D) -> Part:
 
 # ------------------------------------------------------------------ pockets --
 def pocket_tool_local(P, D, extra_depth=0.0) -> Part:
-    """Blind pocket opening at local z=0 going DOWN (-Z). X along chord, Y across thickness."""
+    """Blind pocket following the blade cup, opening at local z=0 and going DOWN (-Z)."""
     K = P["pocket"]
     L, w, dep = D["pocket_length"], K["width"], K["depth"] + extra_depth
     e, sl = K["mouth_end_chamfer"], K["mouth_side_lead_in"]
-    mouth = loft([Pos(0, 0, 0) * Rectangle(L + 2 * e, w + 2 * sl),
-                  Pos(0, 0, -e) * Rectangle(L, w)])
-    above = Pos(0, 0, 0) * Box(L + 2 * e, w + 2 * sl, 2.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    deep = Box(L, w, dep - e + 0.0, align=(Align.CENTER, Align.CENTER, Align.MAX))
-    return mouth + above + Pos(0, 0, -e) * deep
+    wide = cup_sector(P, -(w / 2 + sl), w / 2 + sl, -L / 2 - e, L / 2 + e)
+    narrow = cup_sector(P, -w / 2, w / 2, -L / 2, L / 2)
+    mouth = loft([wide, Pos(0, 0, -e) * narrow])
+    above = extrude(wide, amount=2.0)
+    deep = Pos(0, 0, -dep) * extrude(narrow, amount=dep - e)
+    return mouth + above + deep
 
 
 def weep_tool_local(P, D, radial=True) -> Part:
-    """Diamond (self-supporting) drain channel from pocket outer end, radially outward, 2 deg fall."""
-    K, LH = P["pocket"], P["lower_hub"]
-    th = P["blade"]["plan_chord_angle_from_radial"] * RAD
+    """Diamond (self-supporting) drain channel from the pocket's outer end, 2 deg fall.
+    radial=True points it radially outward in the hub; False points it along local +X (coupons)."""
+    K, LH, B = P["pocket"], P["lower_hub"], P["blade"]
+    th = B["plan_chord_angle_from_radial"] * RAD
     a = LH["weep_channel_size"]
     half_diag = a * math.sqrt(2) / 2
-    length = 16.0
-    ch = Rot(45, 0, 0) * Box(length, a, a, align=(Align.MIN, Align.CENTER, Align.CENTER))
+    ch = Rot(45, 0, 0) * Box(20.0, a, a, align=(Align.MIN, Align.CENTER, Align.CENTER))
     ch = Pos(0, 0, -K["depth"] + half_diag) * ch
     ch = Rot(0, 2.0, 0) * ch                                   # outer end lower
     if radial:
         ch = Rot(0, 0, -th / RAD) * ch                          # radial direction in local frame
-    return Pos(D["pocket_length"] / 2 - 1.0, 0, 0) * ch
+    sx, sy = _cup_xy(B["cup_radius"], B["cup_direction"], B["cup_radius"], (D["pocket_length"] / 2 - 1.0) / B["cup_radius"])
+    return Pos(sx, sy, 0) * ch
 
 
-# --------------------------------------------------------------- hub fixing --
 def set_screw_tools(az_deg, z_axis, boss_r, slot_from_z, slot_to_z, F, bore_d) -> Part:
     """Radial M4 tapped-nut set-screw hole + vertical nut slot (opening toward slot_from_z)."""
     hole = Rot(0, 0, az_deg) * Pos(0, 0, z_axis) * Rot(0, 90, 0) * Cylinder(
@@ -185,7 +170,7 @@ def set_screw_tools(az_deg, z_axis, boss_r, slot_from_z, slot_to_z, F, bore_d) -
     return hole + slot
 
 
-SCREW_AZ = 26.0  # hex-key access line between blade 0 and blade 1; verified by access check
+SCREW_AZ = 26.0  # azimuth of the lower-hub set screw and the upper-hub captive-nut slot (between ribs/spokes)
 
 
 # ---------------------------------------------------------------- upper hub --
@@ -214,16 +199,15 @@ def upper_hub(P, D) -> Part:
         pl = blade_plane(i, P, D, zf)
         pocket = pl * mirror(pocket_tool_local(P, D), Plane.XY)
         hub -= pocket
-        nw = P["blade"]["thickness"] + 2 * U["blade_notch_clearance"]
-        notch = Box(60, nw, lip_h + 1.0, align=(Align.MIN, Align.CENTER, Align.MAX))
-        notch = fillet(notch.edges().filter_by(Axis.Z), 1.5)
-        hub -= pl * Pos(2.0, 0, 0.01) * notch
+        clr = P["blade"]["thickness"] / 2 + U["blade_notch_clearance"]
+        notch = extrude(cup_sector(P, -clr, clr, D["blade_u_inner"] - 3.0, D["blade_u_outer"] + 3.0), amount=lip_h + 1.0)
+        hub -= pl * Pos(0, 0, -(lip_h + 1.0) + 0.01) * notch
 
-    # shaft blind bore + set screw + nut slot
+    # shaft blind bore + side-entry slot for the captive M4 nut of the tie rod
     bore_d = P["shaft"]["hub_bore_diameter"]
     hub -= zcyl(bore_d / 2, zf + zb - 1, D["z_upper_bore_top"])
-    hub -= set_screw_tools(SCREW_AZ, D["z_upper_set_screw"], rb, zf + zb - 1,
-                           D["z_upper_set_screw"] + 4.5, F, bore_d)
+    hub -= Rot(0, 0, SCREW_AZ) * Pos(-4.4, 0, D["z_upper_nut_bottom"] - 0.15) * Box(
+        rb + 6.0, F["nut_slot_width"], F["nut_slot_thickness"], align=(Align.MIN, Align.CENTER, Align.MIN))
     # bore entry chamfer
     hub -= Pos(0, 0, zf + zb - 0.01) * Cylinder(bore_d / 2 + 0.8, 0.8, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return hub
@@ -378,7 +362,22 @@ def rain_tray(P, D) -> Part:
 
 # --------------------------------------------------------- purchased parts --
 def shaft(P, D) -> Part:
-    return zcyl(P["shaft"]["nominal_diameter"] / 2, D["z_shaft_bottom"], D["z_shaft_top"])
+    """Hollow 1/4 in stainless tube shaft (the tie rod runs inside it)."""
+    return ring(P["shaft"]["tube_id"] / 2, P["shaft"]["nominal_diameter"] / 2, D["z_shaft_bottom"], D["z_shaft_top"])
+
+
+def _hex_nut(z0, height, af=7.0, hole=2.0):
+    return Pos(0, 0, z0) * extrude(RegularPolygon(af / math.sqrt(3), 6) - RegularPolygon(hole, 24), amount=height)
+
+
+def tie_rod_parts(P, D):
+    """M4 tie rod, captive nut in the upper hub, washer + nyloc nut under the shaft."""
+    F = P["hub_fixing"]
+    rod = zcyl(F["tie_rod_diameter"] / 2, D["z_tie_rod_bottom"], D["z_tie_rod_top"])
+    top_nut = Rot(0, 0, SCREW_AZ) * _hex_nut(D["z_upper_nut_bottom"], 3.2)
+    washer = ring(2.15, 4.5, D["z_shaft_bottom"] - 1.2, D["z_shaft_bottom"])
+    bot_nut = Rot(0, 0, SCREW_AZ) * _hex_nut(D["z_shaft_bottom"] - 1.2 - 5.0, 5.0)
+    return rod, top_nut, washer, bot_nut
 
 
 def bearing(P, z_center) -> list[Part]:
@@ -442,58 +441,49 @@ def inlet_louver(P) -> Part:
 
 
 # -------------------------------------------------------------- forming die --
-def _die_profile_points(s, H, t, side, tab, n=61):
-    pts = _bow_side_points(s, H, t, side, n)
-    # (w, z) -> die coordinates (x along blade length, y height)
-    return [(z, w) for (w, z) in pts]
-
-
 def forming_dies(P, D):
+    """Cylindrical press die that rolls the blade ACROSS its width onto the cup radius.
+    X = along the blade length, Y = across the width, Z up. Lower die is convex, upper concave.
+    The die radius is tighter than the cup radius by the springback factor."""
     B, FD = P["blade"], P["forming_die"]
-    t, tab = B["thickness"], B["tab_length"]
-    s_die = B["bow_sagitta"] * FD["springback_factor"]
-    H_die = solve_cap_separation(D["blade_developed_body_length"], s_die)
-    cl = FD["side_clearance"]
-    x0, x1 = -tab - cl, H_die + tab + cl
-    width = B["body_chord"] + 2 * cl
-    base, wall = FD["base_thickness"], FD["wall"]
+    t, tab, tw = B["thickness"], B["tab_length"], B["tab_width"]
+    H = D["cap_separation"]
+    Rd = B["cup_radius"] / FD["springback_factor"]          # mid-surface radius while clamped
+    base = FD["base_thickness"]
+    L = H + 2 * tab + 2 * FD["wall"]
+    x0 = -tab - FD["wall"]
+    half_ang = (B["body_chord"] / 2 + 4.0) / Rd
+    Wd = 2 * (Rd - t / 2) * math.sin(half_ang)
+    axis_z = -Rd                                               # cylinder axis (blank crest at Z = 0)
+    cyl = lambda r: Pos(x0 - 1, 0, axis_z) * Rot(0, 90, 0) * Cylinder(r, L + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))  # noqa: E731
+    z_edge_lo = axis_z + math.sqrt((Rd - t / 2) ** 2 - (Wd / 2) ** 2)
+    lower = Pos(x0, 0, z_edge_lo - base) * Box(L, Wd, base - z_edge_lo + 1.0, align=(Align.MIN, Align.CENTER, Align.MIN))
+    lower = lower & cyl(Rd - t / 2)                          # convex top on the forming radius
+    # locating posts in the notch zones beside each tab (shoulders butt against them)
+    post_y = tw / 2 + 0.3 + 2.0
+    posts = None
+    for xa, xb in ((-tab + 1.0, -0.3), (H + 0.3, H + tab - 1.0)):
+        for sy in (-1, 1):
+            pz = axis_z + math.sqrt((Rd - t / 2) ** 2 - post_y ** 2)
+            pst = Pos(xa, sy * post_y, pz - 3.0) * Box(xb - xa, 4.0, 3.0 + t + 2.5, align=(Align.MIN, Align.CENTER, Align.MIN))
+            posts = pst if posts is None else posts + pst
+    lower = lower + posts
+    z_edge_up = axis_z + math.sqrt((Rd + t / 2) ** 2 - (Wd / 2) ** 2)
+    upper = Pos(x0, 0, z_edge_up) * Box(L, Wd, t + base + (0 - z_edge_up) + 2.0, align=(Align.MIN, Align.CENTER, Align.MIN))
+    upper = upper - cyl(Rd + t / 2)
+    upper = upper - _grow(posts, 0.6)                        # relief over the locating posts
+    return lower, upper, Rd, H
 
-    lo = _die_profile_points(s_die, H_die, t, -1, tab)
-    hi = _die_profile_points(s_die, H_die, t, +1, tab)
-    with BuildSketch(Plane.XY) as sk:
-        with BuildLine():
-            Polyline((x1, -t / 2), (x1, -t / 2 - base), (x0, -t / 2 - base), (x0, -t / 2), lo[0])
-            Spline(*lo, tangents=[(1, 0), (1, 0)])
-            Line(lo[-1], (x1, -t / 2))
-        make_face()
-    lower_core = extrude(Plane.XZ * sk.sketch, amount=width / 2, both=True)
-    y_top = s_die + t / 2 + 8.0
-    fence = Box(x1 - x0 + 2 * wall, wall, y_top + t / 2 + base, align=(Align.MIN, Align.MIN, Align.MIN))
-    lower = lower_core
-    for sy in (-1, 1):
-        y0 = width / 2 if sy > 0 else -width / 2 - wall
-        lower += Pos(x0 - wall, y0, -t / 2 - base) * fence
-    end = Box(wall, width + 2 * wall, base + t + 4.0, align=(Align.MIN, Align.CENTER, Align.MIN))
-    lower += Pos(x0 - wall, 0, -t / 2 - base) * end
-    lower += Pos(x1, 0, -t / 2 - base) * end
-    # orientation key: fills the wide notch beside each tab so the blank only fits one way
-    u0 = D["blade_u_inner"]
-    y_of_u = lambda u: -(u - (u0 + D["blade_u_outer"]) / 2)  # noqa: E731  (die Y centred on chord)
-    k_w = D["blade_u_outer"] - (B["tab_width"] / 2 + B["tab_root_radius"] + 1.0)
-    k_c = (D["blade_u_outer"] + B["tab_width"] / 2 + B["tab_root_radius"] + 1.0) / 2
-    key = Box(tab - 1.0, k_w, t - 0.2, align=(Align.MIN, Align.CENTER, Align.MIN))
-    lower += Pos(x0 + cl, y_of_u(k_c), -t / 2) * key
-    lower += Pos(x1 - cl - (tab - 1.0), y_of_u(k_c), -t / 2) * key
 
-    # upper (punch)
-    with BuildSketch(Plane.XY) as sk2:
-        with BuildLine():
-            Polyline((x1 - cl, t / 2), (x1 - cl, y_top + base), (x0 + cl, y_top + base), (x0 + cl, t / 2), hi[0])
-            Spline(*hi, tangents=[(1, 0), (1, 0)])
-            Line(hi[-1], (x1 - cl, t / 2))
-        make_face()
-    upper = extrude(Plane.XZ * sk2.sketch, amount=width / 2 - cl, both=True)
-    return lower, upper, s_die, H_die
+def _grow(shape, d):
+    """Relief clearance around the locating posts (bounding boxes grown by d)."""
+    out = None
+    for so in shape.solids():
+        bb = so.bounding_box()
+        b = Pos(bb.min.X - d, bb.min.Y - d, bb.min.Z - d) * Box(bb.size.X + 2 * d, bb.size.Y + 2 * d, bb.size.Z + 2 * d + 30,
+                                                               align=(Align.MIN, Align.MIN, Align.MIN))
+        out = b if out is None else out + b
+    return out
 
 
 # ------------------------------------------------------------------ coupons --

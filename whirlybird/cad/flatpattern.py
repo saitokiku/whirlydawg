@@ -10,7 +10,6 @@ import math
 import ezdxf
 import numpy as np
 
-from params import bow_offset, bow_slope
 
 OUTER_CORNER_R = 2.0   # deburr radius on the 4 outer body corners (template only; not in 3-D model)
 
@@ -74,6 +73,16 @@ def polyline_points(segs, step_deg=5):
     return pts
 
 
+def cup_gauge_points(P, n=61):
+    """End view of the formed blade (looking along its length): both faces of the cup arc,
+    chord horizontal, concave side UP, lowest point at x = 0. Returns (inner, outer, mid)."""
+    B = P["blade"]
+    Rc, t = B["cup_radius"], B["thickness"]
+    f = np.linspace(-B["body_chord"] / 2 / Rc, B["body_chord"] / 2 / Rc, n)
+    face = lambda R: list(zip(R * np.sin(f), Rc - R * np.cos(f)))  # noqa: E731
+    return face(Rc + t / 2), face(Rc - t / 2), face(Rc)
+
+
 def annotations(P, D):
     B = P["blade"]
     W, Lb, tl, tw, m = B["body_chord"], B["blank_length"], B["tab_length"], B["tab_width"], B["tab_inner_margin"]
@@ -81,9 +90,28 @@ def annotations(P, D):
         "tab_centerline_x": m + tw / 2,
         "body_centerline_x": W / 2,
         "shoulder_y": (tl, Lb - tl),
-        "bow_peak_y": tl + D["blade_developed_body_length"] / 2,
+        "mid_y": tl + D["blade_developed_body_length"] / 2,
         "W": W, "L": Lb,
     }
+
+
+STOCK = (298.45, 95.25)          # 11.75 x 3.75 in aluminium pieces
+NEST_EDGE_X, NEST_EDGE_Y = 4.0, 1.5
+NEST_KERF_X, NEST_KERF_Y = 3.0, 2.0
+
+
+def nest(P):
+    """(stock index, x, y) of each blank, blade length along the stock: 2 along x 2 across y per piece."""
+    B = P["blade"]
+    out = []
+    per_row = int((STOCK[0] - NEST_EDGE_X + NEST_KERF_X) // (B["blank_length"] + NEST_KERF_X))
+    rows = int((STOCK[1] - 2 * NEST_EDGE_Y + NEST_KERF_Y) // (B["body_chord"] + NEST_KERF_Y))
+    per = per_row * rows
+    for i in range(P["blade_count"]):
+        k, j = divmod(i, per)
+        r, cidx = divmod(j, per_row)
+        out.append((k, NEST_EDGE_X + cidx * (B["blank_length"] + NEST_KERF_X), NEST_EDGE_Y + r * (B["body_chord"] + NEST_KERF_Y)))
+    return out
 
 
 def write_dxf(P, D, path, layout="single"):
@@ -119,7 +147,7 @@ def write_dxf(P, D, path, layout="single"):
         msp.add_line(T((xt, -3)), T((xt, an["L"] + 3)), dxfattribs={"layer": "CENTER"})
         for ys in an["shoulder_y"]:
             msp.add_line(T((-2, ys)), T((an["W"] + 2, ys)), dxfattribs={"layer": "SHOULDER"})
-        yb = an["bow_peak_y"]
+        yb = an["mid_y"]
         msp.add_line(T((-2, yb)), T((an["W"] + 2, yb)), dxfattribs={"layer": "CENTER"})
         if label:
             msp.add_text(label, height=3.5, dxfattribs={"layer": "NOTES"}).set_placement(T((an["W"] / 2 - 8, an["L"] / 2 + 20)))
@@ -130,17 +158,14 @@ def write_dxf(P, D, path, layout="single"):
                      f"Cut OUTSIDE the line (kerf). Root R{B['tab_root_radius']:.0f}.", height=2.5,
                      dxfattribs={"layer": "NOTES"}).set_placement((0, -10))
     else:
-        sl, sw = 298.45, 95.25      # 11.75 x 3.75 in stock
-        kerf = 3.0
-        n = 0
-        for k in range(4):
-            oy = k * (sw + 15)
-            msp.add_lwpolyline([(0, oy), (sl, oy), (sl, oy + sw), (0, oy + sw)], close=True, dxfattribs={"layer": "STOCK"})
-            msp.add_text(f"STOCK {k + 1}: 11.75 x 3.75 in (298.45 x 95.25)", height=3, dxfattribs={"layer": "NOTES"}).set_placement((0, oy + sw + 3))
-            for j in range(2):
-                n += 1
-                ox = 4.0 + j * (B["blank_length"] + kerf)
-                place(ox, oy + 4.0, rot90=True, label=f"BLADE {n}")
+        sl, sw = STOCK
+        for n, (k, ox, oy) in enumerate(nest(P), 1):
+            yb = k * (sw + 15)
+            if ox == NEST_EDGE_X and oy == NEST_EDGE_Y:
+                msp.add_lwpolyline([(0, yb), (sl, yb), (sl, yb + sw), (0, yb + sw)], close=True, dxfattribs={"layer": "STOCK"})
+                msp.add_text(f"STOCK {k + 1}: 11.75 x 3.75 in (298.45 x 95.25)", height=3,
+                             dxfattribs={"layer": "NOTES"}).set_placement((0, yb + sw + 3))
+            place(ox, yb + oy, rot90=True, label=f"BLADE {n}")
     doc.saveas(path)
     return path
 
@@ -183,19 +208,16 @@ def svg_blade(P, D, path, with_profile=True):
     out.append(f'<line x1="{tx(0)}" y1="{height - 6}" x2="{tx(50)}" y2="{height - 6}" stroke="black" stroke-width="0.4"/>')
     out.append(f'<text x="{tx(0)}" y="{height - 8}" font-size="2.5" font-family="sans-serif">50 mm</text>')
     if with_profile:
-        H, s, t = D["cap_separation"], B["bow_sagitta"], B["thickness"]
-        z = np.linspace(0, H, 121)
-        w = bow_offset(z, s, H)
-        x0 = tx(W) + 15
-        tl = B["tab_length"]
-
-        def py(zv):
-            return ty(zv + tl)
-        pts = " ".join(f"{x0 + wv:.3f},{py(zv):.3f}" for wv, zv in zip(w, z))
-        out.append(f'<polyline points="{x0},{py(-tl)} {pts} {x0},{py(H + tl)}" fill="none" stroke="blue" stroke-width="0.3"/>')
-        out.append(f'<line x1="{x0}" y1="{py(-tl)}" x2="{x0}" y2="{py(H + tl)}" stroke="gray" stroke-width="0.15" stroke-dasharray="2 1"/>')
-        out.append(f'<text x="{x0 - 2}" y="{py(H + tl) - 3}" font-size="2.5" font-family="sans-serif">FORMED SIDE PROFILE</text>')
-        out.append(f'<text x="{x0 + s + 1}" y="{py(H / 2)}" font-size="2.5" font-family="sans-serif">{s:.0f} mm bow</text>')
+        # 1:1 cup gauge: end view of the formed blade, concave side up
+        outer, inner, mid = cup_gauge_points(P)
+        gx, gy = tx(W) + 30, ty(an["L"] / 2)
+        for face, col in ((outer, "blue"), (inner, "blue")):
+            pts = " ".join(f"{gx + x:.3f},{gy - y:.3f}" for x, y in face)
+            out.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="0.3"/>')
+        cd = mid[-1][1]
+        out.append(f'<line x1="{gx + mid[0][0]:.3f}" y1="{gy - cd:.3f}" x2="{gx + mid[-1][0]:.3f}" y2="{gy - cd:.3f}" stroke="gray" stroke-width="0.15" stroke-dasharray="2 1"/>')
+        out.append(f'<text x="{gx - 22}" y="{gy - cd - 4}" font-size="2.5" font-family="sans-serif">CUP GAUGE 1:1 - R{B["cup_radius"]:.0f}, {cd:.1f} mm deep</text>')
+        out.append(f'<text x="{gx - 22}" y="{gy + 6}" font-size="2.2" font-family="sans-serif">stand the formed blade on its end here</text>')
     out.append("</svg>")
     with open(path, "w") as f:
         f.write("\n".join(out))

@@ -1,4 +1,4 @@
-# Print and assemble – doghouse whirlybird (DW-V1.1)
+# Print and assemble – doghouse whirlybird (DW-V2.0, 20 cupped blades)
 
 Work through the phases in order. Each phase ends with a check; do not skip ahead.
 File paths are relative to the top of this repository.
@@ -28,19 +28,24 @@ Regenerate with `cd whirlybird/cad && xvfb-run -a python build_all.py` (or ask C
 
 ## Phase 1 – One blade only (gate C)
 
-1. **Print the template.** Print `2_BLADES_cut_and_bend/blade_and_roof_templates_1to1.pdf` page 1 at **100 % / actual size**. Check the 50 mm and 2.000 in bars with calipers.
-2. **Cut the blank.** Glue the template to the stock. Rip to 57.15 mm, then crosscut to 139.7 mm, cutting on the waste side of the line.
-3. **Notch the tabs.** Saw or snip to 2 mm short of the shoulder, then file the R2 roots. Break all edges, round the outer corners R2, and chamfer the tab tips 1 × 45°. **Do not drill any holes.**
-4. **Print the die.** Print `2_BLADES_cut_and_bend/blade_forming_die_lower.stl` and `blade_forming_die_upper.stl`: PETG-HF or PLA, 6 walls, 50 % infill, as oriented.
-5. **Form the blade.** Drop the blank into the lower die. The key blocks only let it sit tab-side correct. Squeeze the stack in a bench vise until the die faces meet, then release.
-6. **Measure the blade.** Lay it on the 1:1 profile gauge (template page 1).
-   - Target bow: 15 ± 1.5 mm.
-   - Shoulder spacing: 121.2 ± 0.5 mm.
-   - Tabs: flat, parallel and in line.
-   - If it's too flat, raise `forming_die.springback_factor` (now 1.30) and reprint the upper and lower die.
-7. **Test the fit.** Insert both tabs into the coupons; the blade must line up without twisting.
+The blades are **curled across their width** into a shallow scoop (R45, 5.4 mm deep). They stay
+straight along their length. You need **20 blades**: 4 blanks per 11.75 × 3.75 in piece, 5 pieces.
 
-Then cut and form the other 7 blades using the nest in `2_BLADES_cut_and_bend/blade_flat_pattern_8x.dxf`: 2 blades per 11.75 × 3.75 in piece, 4 pieces in total. **Install all 8 the same way:** tab at the shaft-side edge, bow bulging outward.
+1. **Print the template.** Print `2_BLADES_cut_and_bend/blade_and_roof_templates_1to1.pdf` page 1 at **100 % / actual size**. Check the 50 mm and 2.000 in bars with calipers.
+2. **Cut the blank.** Glue the template to the stock. Rip a strip 44.5 mm wide, then crosscut to 139.7 mm, cutting on the waste side of the line. Page 2 shows how 4 blanks fit on each piece.
+3. **Notch the tabs.** Tabs are centred, so the blank is symmetric. Saw or snip to 2 mm short of the shoulder, then file the R2 roots. Break all edges, round the outer corners R2, and chamfer the tab tips 1 × 45°. **Do not drill any holes.**
+4. **Print the die.** Print `2_BLADES_cut_and_bend/blade_forming_die_lower.stl` (convex) and `blade_forming_die_upper.stl` (concave): PETG-HF or PLA, 6 walls, 50 % infill, as oriented.
+5. **Curl the blade.**
+   - Lay the blank on the lower die so its tabs sit between the 4 small posts and its shoulders butt against them.
+   - Put the upper die on top, squeeze the stack in a bench vise until the die faces meet, and release.
+   - Tabs and body curl together.
+6. **Measure the blade.** Stand it on its end on the **1:1 cup gauge** (template page 1).
+   - Depth: 5.4 ± 0.7 mm.
+   - Length: still straight; both tabs in line.
+   - If it's too flat, raise `forming_die.springback_factor` (now 1.35) and reprint the die.
+7. **Test the fit.** Insert both tabs into the test pockets (they are curved to match); the blade must go in without twisting.
+
+Then cut and form the other 19 blades using the nest in `2_BLADES_cut_and_bend/blade_flat_pattern_all_blades.dxf`. **Install all 20 the same way round** (concave side facing the same way round the ring, as in `4_DRAWINGS/images/view_top.png`).
 
 ## Phase 2 – Print the parts
 
@@ -65,13 +70,14 @@ The STL files are **already in print orientation**. In Bambu Studio, import them
 - **ABS and PC-FR:** these are not UV-stable. Paint them with exterior acrylic.
 - **PLA:** don't use it on the roof.
 
-Bambu Studio reports the real time and filament weight. The CAD-volume estimate at ~55 % effective fill (PETG) is about 165 g per hub, 29 g for the support and 90 g for the adapter.
+Bambu Studio reports the real time and filament weight. The CAD-volume estimate at ~55 % effective fill (PETG) is roughly 260 g for the upper hub, 330 g for the lower hub, 29 g for the support and 90 g for the adapter. The 248 mm caps are big prints, so use a brim.
 
 ## Phase 3 – Hardware
 
 See `BOM.csv`. You need:
-- **Shaft:** a 1/4 in stainless rod cut to **201.8 mm**, or your 209.55 mm tube trimmed to length if it slips into both bearing inner races *without force*.
-- **Hub fixings:** 2 × M4 × 6 cup-point set screws and 2 × M4 nuts.
+- **Shaft:** a **hollow** 1/4 in × 0.035 in wall stainless tube cut to **198.8 mm**. Your 209.55 mm tube works if it slips into both bearing inner races *without force* and an M4 rod passes through it.
+- **Tie rod (holds the top cap down):** M4 stainless threaded rod cut to 211 mm, 1 × M4 hex nut (captive in the top cap), 1 × M4 washer, 1 × M4 nyloc nut.
+- **Lower hub fixing:** 1 × M4 × 6 cup-point set screw and 1 × M4 nut.
 - **Shaft collar:** one 1/4 in bore set-screw collar.
 - **Support screws:** 3 × M3 × 12.
 - **Roof screws:** 8 × #8 × 3/4 in stainless pan-head screws with EPDM washers.
@@ -88,11 +94,15 @@ See `BOM.csv`. You need:
    - Remove the shaft and spot-drill a 3.5 mm × ~1 mm dimple at the mark, using `shaft_dimple_drill_guide` clamped in a vise.
    - Refit, then tighten with medium threadlocker.
    - Slide the collar up under the bottom washer leaving **0.2 mm end play** (a paper shim) and tighten its screw.
-5. **Blades.** Lower each blade **straight down** into a lower-hub pocket. All 8 the same way: tab toward the shaft, bow outward.
-6. **Upper hub.** Lower it **straight down** over all 8 upper tabs; the 2 mm lead-ins guide them. Press lightly (about 20 N) until every shoulder seats. Don't load it up: the bowed blades are springs.
-7. **Lock the upper hub.** Mark through the upper set-screw hole, take the upper hub off (the blades stay in the lower hub), dimple the shaft, refit, and tighten with threadlocker. The blades are now trapped, with no per-blade hardware.
+5. **Blades.** Lower each blade **straight down** into a lower-hub pocket. All 20 the same way round. The curved pockets only accept a blade curled the right way.
+6. **Upper hub.** Slide an M4 hex nut into the side slot in the upper hub's centre boss (do this on the bench). Lower the hub **straight down** over all 20 upper tabs; the 2 mm lead-ins guide them.
+7. **Tie rod.**
+   - Push the M4 rod up through the tube from below and thread it into the captive nut (about 5 turns, medium threadlocker).
+   - Under the tube end, add the washer and nyloc nut.
+   - Tighten until every blade shoulder seats on both caps, then 1/4 turn more. That's light: the blades are only being clamped, not crushed.
+   - The blades are now trapped, with no per-blade hardware.
 8. **Check.**
-   - **Spin and pull (gate D/E):** spin by hand. There should be no rub, no rattle, and no blade touching anything stationary. Pull test each blade at about 50 N (a luggage scale) in the radial and axial directions; it must not move.
+   - **Spin and pull (gate D/E):** spin by hand. There should be no rub, no rattle, and no blade touching anything stationary. Pull test a few blades at about 50 N (a luggage scale) in the radial and axial directions; they must not move.
    - **Balance:** stand the cartridge on its tower, let the rotor settle, and put tape weights on the light side of the upper hub rim until it stops anywhere.
 
 ## Phase 5 – Roof installation
@@ -108,8 +118,8 @@ See `BOM.csv`. You need:
 
 - **Weeps:** each lower pocket drains through a concealed 1.6 mm diamond weep to the hub OD. Twice a year, clear the weeps with a 1.5 mm wire.
 - **Water on the lower ring:** it runs off the edge. Nothing drains into the bearings: the rotating cup over the stationary tower is a 2 mm labyrinth, and both bearings are 2RS sealed. A dab of grease where the shaft enters the lower boss stops water wicking down the shaft.
-- **Service:** remove the 3 M3 screws and the whole rotor and bearing cartridge lifts out. Bearings are standard R4-2RS.
-- **Inspect yearly:** pockets for cracks, set screws for tightness, blades for fatigue at the tab roots.
+- **Service:** remove the 3 M3 screws and the whole rotor and bearing cartridge lifts out. To take the rotor apart, undo the nyloc nut under the shaft, unscrew the rod, and lift the top cap off. Bearings are standard R4-2RS.
+- **Inspect yearly:** pockets for cracks, the tie-rod nut and lower set screw for tightness, blades for fatigue at the tab roots.
 
 ## Troubleshooting
 
@@ -118,8 +128,9 @@ See `BOM.csv`. You need:
 | Tab too tight or splits the pocket | width too small → next coupon size up, rebuild |
 | Blade rattles | width too large → next size down; or upper hub not seated |
 | Upper hub won't drop over the tabs | tabs not vertical or in line → re-press the blade in the die; check the tabs are flat |
-| Blades differ in height by more than 0.5 mm | blank length or bow varies → re-cut to the template; form all 8 in the same die |
+| Blades differ in height by more than 0.3 mm | blank length varies → re-cut to the template (the tie rod takes up small differences) |
+| Blade won't enter its curved pocket | cup too flat or too deep → re-press in the die; check on the 1:1 cup gauge |
 | Rotor drags | washer touching the bearing seal or outer race → reduce `inner_race_land_od`; check 0.2 mm end play |
-| Rotor wobbles | shaft bore oversize or set screw not in its dimple → tighter bore coupon; re-dimple |
+| Rotor wobbles | shaft bore oversize, lower set screw not in its dimple, or tie rod loose → tighter bore coupon; re-dimple; re-tighten the nyloc |
 | Rubs the collar | the 6 mm gap is set by the lower hub sitting on the top washer → check the washer is present |
 | Vibration in wind | unbalanced → re-balance; stop immediately if oscillation grows (gate E) |
